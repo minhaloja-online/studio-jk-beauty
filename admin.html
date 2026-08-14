@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel · Studio JK Beauty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232A1D22'/><text x='50' y='68' font-family='Georgia,serif' font-size='52' fill='%23C8A86B' text-anchor='middle'>JK</text></svg>">
+
+<style>
+:root{
+  --porcelana:#F7F2EE; --branco:#FDFAF8; --tinta:#241C1A; --suave:#6B5B56;
+  --rosa:#9E5F63; --dourado:#C8A86B; --escuro:#2A1D22; --borda:rgba(36,28,26,.12);
+  --ok:#5B7B5A; --alerta:#A8524F;
+  --display:'Fraunces',Georgia,serif; --corpo:'Jost',system-ui,sans-serif;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+body{ margin:0; background:var(--porcelana); color:var(--tinta); font-family:var(--corpo); font-weight:300; font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+h1,h2,h3{ font-family:var(--display); font-weight:300; margin:0; line-height:1.15; }
+button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+a{ color:var(--rosa); }
+input,textarea,select{ font:inherit; }
+:focus-visible{ outline:2px solid var(--rosa); outline-offset:2px; }
+.esconde{ display:none !important; }
+
+/* ---------- ENTRADA ---------- */
+#entrada{ min-height:100svh; display:grid; place-items:center; padding:24px; }
+.cartao{ width:min(100%,410px); background:var(--branco); border-radius:20px; padding:34px 30px; box-shadow:0 30px 60px -34px rgba(42,29,34,.45); }
+.marca{ text-align:center; margin-bottom:26px; }
+.marca b{ font-family:var(--display); font-size:1.5rem; font-weight:300; letter-spacing:.12em; display:block; }
+.marca b i{ color:var(--rosa); }
+.marca small{ font-size:.6rem; letter-spacing:.3em; text-transform:uppercase; color:var(--suave); }
+.aviso{ background:rgba(200,168,107,.14); border:1px solid rgba(200,168,107,.5); border-radius:12px; padding:12px 14px; font-size:.82rem; margin-bottom:18px; }
+
+/* ---------- CAMPOS ---------- */
+.campo{ margin-bottom:14px; }
+.campo label{ display:block; font-size:.64rem; letter-spacing:.16em; text-transform:uppercase; color:var(--suave); margin-bottom:6px; }
+.campo input[type=text],.campo input[type=email],.campo input[type=password],.campo textarea,.campo select{
+  width:100%; background:var(--porcelana); border:1px solid var(--borda); border-radius:10px; padding:11px 13px; color:var(--tinta); transition:border-color .2s,background .2s;
+}
+.campo textarea{ resize:vertical; min-height:78px; line-height:1.55; }
+.campo input:focus,.campo textarea:focus,.campo select:focus{ outline:none; border-color:var(--rosa); background:var(--branco); }
+.campo .ajuda{ font-size:.74rem; color:var(--suave); margin-top:5px; }
+
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5em; padding:.82em 1.5em; border-radius:999px; background:var(--escuro); color:var(--branco); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; transition:background .25s,transform .25s,opacity .2s; }
+.btn:hover{ background:var(--rosa); transform:translateY(-1px); }
+.btn[disabled]{ opacity:.5; pointer-events:none; }
+.btn.linha{ background:none; color:var(--tinta); box-shadow:inset 0 0 0 1px var(--borda); }
+.btn.linha:hover{ background:var(--escuro); color:var(--branco); }
+.btn.perigo{ background:none; color:var(--alerta); box-shadow:inset 0 0 0 1px rgba(168,82,79,.4); }
+.btn.perigo:hover{ background:var(--alerta); color:#fff; }
+.btn.largo{ width:100%; }
+.btn.mini{ padding:.55em 1em; font-size:.64rem; }
+.erro{ color:var(--alerta); font-size:.84rem; min-height:1.2em; margin:4px 0 10px; }
+.texto-link{ display:block; text-align:center; margin-top:14px; font-size:.76rem; color:var(--suave); }
+
+/* ---------- PAINEL ---------- */
+#painel{ display:grid; grid-template-columns:236px 1fr; min-height:100svh; }
+.lado{ background:var(--escuro); color:var(--branco); padding:26px 18px; display:flex; flex-direction:column; gap:6px; position:sticky; top:0; height:100svh; }
+.lado .marca{ text-align:left; margin-bottom:24px; }
+.lado .marca b{ color:var(--branco); font-size:1.15rem; }
+.lado .marca small{ color:rgba(253,250,248,.45); }
+.aba{ display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; text-align:left; padding:11px 14px; border-radius:10px; color:rgba(253,250,248,.62); font-size:.82rem; transition:background .2s,color .2s; }
+.aba:hover{ background:rgba(253,250,248,.06); color:var(--branco); }
+.aba.on{ background:rgba(200,168,107,.16); color:var(--dourado); }
+.selo{ background:var(--rosa); color:#fff; font-size:.62rem; padding:1px 7px; border-radius:999px; }
+.lado .rodape{ margin-top:auto; display:grid; gap:8px; font-size:.72rem; }
+.lado .rodape a,.lado .rodape button{ color:rgba(253,250,248,.6); text-align:left; padding:6px 14px; border-radius:8px; }
+.lado .rodape a:hover,.lado .rodape button:hover{ color:var(--branco); background:rgba(253,250,248,.06); }
+
+.conteudo{ padding:34px clamp(18px,3vw,44px) 120px; max-width:1000px; }
+.titulo-pg{ margin-bottom:6px; font-size:2rem; }
+.legenda{ color:var(--suave); margin:0 0 28px; max-width:62ch; }
+.bloco{ background:var(--branco); border:1px solid var(--borda); border-radius:16px; padding:22px 22px 8px; margin-bottom:18px; }
+.bloco h3{ font-size:1.15rem; margin-bottom:4px; }
+.bloco .desc{ font-size:.82rem; color:var(--suave); margin:0 0 18px; }
+.dupla{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+@media(max-width:700px){ .dupla{ grid-template-columns:1fr; } }
+
+/* ---------- BARRA DE SALVAR ---------- */
+.barra{ position:fixed; left:236px; right:0; bottom:0; z-index:50; background:var(--branco); border-top:1px solid var(--borda); padding:12px clamp(18px,3vw,44px); display:flex; align-items:center; gap:14px; justify-content:flex-end; box-shadow:0 -8px 24px -18px rgba(42,29,34,.5); }
+.barra .estado{ margin-right:auto; font-size:.82rem; color:var(--suave); }
+.barra .estado.sujo{ color:var(--rosa); }
+
+/* ---------- FOTOS ---------- */
+.fotos{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; }
+.foto{ border:1px solid var(--borda); border-radius:14px; overflow:hidden; background:var(--porcelana); }
+.foto .quadro{ aspect-ratio:.85; background:linear-gradient(155deg,#EADAD4,#C9AAA4); background-size:cover; background-position:center; display:grid; place-content:center; color:rgba(42,29,34,.35); font-family:var(--display); font-size:1.6rem; }
+.foto .corpo{ padding:10px; display:grid; gap:8px; }
+.foto b{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--suave); font-weight:500; }
+.foto input[type=text]{ width:100%; font-size:.76rem; padding:7px 9px; border:1px solid var(--borda); border-radius:8px; background:var(--branco); }
+.foto .acoes{ display:flex; gap:6px; }
+.foto .acoes .btn{ flex:1; }
+.foto input[type=file]{ display:none; }
+.progresso{ font-size:.72rem; color:var(--rosa); }
+
+/* ---------- APARÊNCIA ---------- */
+.cores{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; margin-bottom:6px; }
+.cor{ display:flex; align-items:center; gap:10px; border:1px solid var(--borda); border-radius:12px; padding:8px 10px; background:var(--porcelana); }
+.cor input[type=color]{ width:38px; height:38px; border:0; border-radius:9px; padding:0; background:none; cursor:pointer; flex:none; }
+.cor div{ min-width:0; }
+.cor b{ display:block; font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--suave); font-weight:500; }
+.cor input[type=text]{ width:92px; border:0; background:none; font-size:.82rem; padding:0; }
+.deslize{ display:flex; align-items:center; gap:12px; }
+.deslize input[type=range]{ flex:1; accent-color:var(--rosa); }
+.deslize output{ font-size:.8rem; color:var(--suave); width:56px; text-align:right; }
+.previa{ border:1px solid var(--borda); border-radius:14px; padding:26px; margin-top:6px; }
+.previa .rot{ font-size:.64rem; letter-spacing:.28em; text-transform:uppercase; margin-bottom:10px; }
+.previa h4{ margin:0 0 10px; font-weight:300; font-size:1.9rem; }
+.previa p{ margin:0 0 16px; font-size:.9rem; }
+.previa .bt{ display:inline-block; padding:.8em 1.6em; border-radius:999px; font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; }
+
+/* ---------- AVALIAÇÕES ---------- */
+.av{ border:1px solid var(--borda); border-radius:14px; padding:16px 18px; margin-bottom:12px; background:var(--branco); }
+.av.pendente{ border-color:rgba(200,168,107,.65); background:rgba(200,168,107,.07); }
+.av .topo{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.av .nome{ font-weight:500; }
+.av .data{ font-size:.74rem; color:var(--suave); margin-left:auto; }
+.av p{ margin:0 0 14px; font-size:.92rem; }
+.av .acoes{ display:flex; gap:8px; flex-wrap:wrap; }
+.estrelas{ color:var(--dourado); letter-spacing:1px; font-size:.9rem; }
+.vazio{ border:1px dashed var(--borda); border-radius:14px; padding:34px; text-align:center; color:var(--suave); }
+
+/* ---------- RECADO ---------- */
+#recado{ position:fixed; left:50%; bottom:86px; transform:translate(-50%,20px); z-index:200; background:var(--escuro); color:var(--branco); padding:12px 22px; border-radius:999px; font-size:.84rem; opacity:0; visibility:hidden; transition:.3s; box-shadow:0 16px 40px -18px rgba(0,0,0,.6); }
+#recado.on{ opacity:1; visibility:visible; transform:translate(-50%,0); }
+#recado.ruim{ background:var(--alerta); }
+
+@media(max-width:860px){
+  #painel{ grid-template-columns:1fr; }
+  .lado{ position:static; height:auto; flex-direction:row; flex-wrap:wrap; align-items:center; gap:6px; padding:14px; }
+  .lado .marca{ width:100%; margin-bottom:8px; }
+  .lado .rodape{ margin:0 0 0 auto; display:flex; }
+  .barra{ left:0; }
+  .conteudo{ padding-bottom:130px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= ENTRADA ================= -->
+<section id="entrada">
+  <div class="cartao">
+    <div class="marca"><b>Studio JK <i>Beauty</i></b><small>Painel do studio</small></div>
+
+    <div id="carregando" style="text-align:center;color:var(--suave);font-size:.86rem">Carregando…</div>
+
+    <!-- primeiro acesso -->
+    <form id="form-criar" class="esconde">
+      <div class="aviso"><b>Primeiro acesso.</b> Ainda não existe administrador. A conta criada agora será a dona do painel — e o cadastro fecha em seguida.</div>
+      <div class="campo"><label for="c-email">E-mail</label><input id="c-email" type="email" autocomplete="email" required></div>
+      <div class="campo"><label for="c-senha">Senha</label><input id="c-senha" type="password" autocomplete="new-password" minlength="6" required><div class="ajuda">Mínimo de 6 caracteres. Use uma senha que você não usa em outro lugar.</div></div>
+      <div class="campo"><label for="c-senha2">Repita a senha</label><input id="c-senha2" type="password" autocomplete="new-password" required></div>
+      <p class="erro" id="c-erro"></p>
+      <button class="btn largo" type="submit">Criar minha conta</button>
+    </form>
+
+    <!-- login -->
+    <form id="form-entrar" class="esconde">
+      <div class="campo"><label for="e-email">E-mail</label><input id="e-email" type="email" autocomplete="email" required></div>
+      <div class="campo"><label for="e-senha">Senha</label><input id="e-senha" type="password" autocomplete="current-password" required></div>
+      <p class="erro" id="e-erro"></p>
+      <button class="btn largo" type="submit">Entrar</button>
+      <button class="texto-link" type="button" id="esqueci">Esqueci minha senha</button>
+    </form>
+
+    <a class="texto-link" href="./index.html">← Voltar para o site</a>
+  </div>
+</section>
+
+<!-- ================= PAINEL ================= -->
+<section id="painel" class="esconde">
+  <aside class="lado">
+    <div class="marca"><b>Studio JK <i>Beauty</i></b><small>Painel do studio</small></div>
+    <button class="aba on" data-aba="avaliacoes">Avaliações <span class="selo esconde" id="conta-pendentes">0</span></button>
+    <button class="aba" data-aba="textos">Textos</button>
+    <button class="aba" data-aba="fotos">Fotos</button>
+    <button class="aba" data-aba="aparencia">Aparência</button>
+    <button class="aba" data-aba="contato">Contato e links</button>
+    <button class="aba" data-aba="conta">Minha conta</button>
+    <div class="rodape">
+      <a href="./index.html" target="_blank" rel="noopener">Ver o site ↗</a>
+      <button id="sair">Sair do painel</button>
+    </div>
+  </aside>
+
+  <main class="conteudo">
+    <!-- AVALIAÇÕES -->
+    <div class="pg" id="pg-avaliacoes">
+      <h1 class="titulo-pg">Avaliações</h1>
+      <p class="legenda">O que a cliente envia pelo site chega aqui primeiro. Só aparece no site depois que você aprova.</p>
+      <h3 style="margin-bottom:12px">Esperando aprovação</h3>
+      <div id="lista-pendentes"></div>
+      <h3 style="margin:32px 0 12px">Publicadas no site</h3>
+      <div id="lista-aprovadas"></div>
+    </div>
+
+    <!-- TEXTOS -->
+    <div class="pg esconde" id="pg-textos">
+      <h1 class="titulo-pg">Textos</h1>
+      <p class="legenda">Tudo que está escrito no site. Para quebrar uma linha no meio de um título, dê enter — o site respeita a quebra.</p>
+      <div id="campos-textos"></div>
+    </div>
+
+    <!-- FOTOS -->
+    <div class="pg esconde" id="pg-fotos">
+      <h1 class="titulo-pg">Fotos</h1>
+      <p class="legenda">As fotos são reduzidas automaticamente antes de subir, para o site continuar leve. Onde não houver foto, aparece a moldura com o monograma JK.</p>
+      <div class="bloco">
+        <h3>Fotos das seções</h3>
+        <p class="desc">A foto principal é a primeira coisa que a cliente vê — escolha a melhor.</p>
+        <div class="fotos" id="fotos-secoes"></div>
+      </div>
+      <div class="bloco">
+        <h3>Galeria de trabalhos</h3>
+        <p class="desc">Oito lugares. Fotos de perto, com boa luz, funcionam melhor.</p>
+        <div class="fotos" id="fotos-galeria"></div>
+      </div>
+    </div>
+
+    <!-- APARÊNCIA -->
+    <div class="pg esconde" id="pg-aparencia">
+      <h1 class="titulo-pg">Aparência</h1>
+      <p class="legenda">As demais cores do site (tons suaves, sombras, fundos) são calculadas a partir destas cinco.</p>
+      <div class="bloco">
+        <h3>Cores</h3>
+        <p class="desc">Clique no quadradinho para escolher, ou escreva o código da cor.</p>
+        <div class="cores" id="cores"></div>
+      </div>
+      <div class="bloco">
+        <h3>Fontes e tamanho</h3>
+        <p class="desc">A primeira vale para os títulos, a segunda para o restante do texto.</p>
+        <div class="dupla">
+          <div class="campo"><label for="f-titulo">Fonte dos títulos</label><select id="f-titulo"></select></div>
+          <div class="campo"><label for="f-texto">Fonte dos textos</label><select id="f-texto"></select></div>
+        </div>
+        <div class="campo"><label for="f-base">Tamanho do texto</label>
+          <div class="deslize"><input id="f-base" type="range" min="14" max="20" step="1"><output id="o-base"></output></div>
+        </div>
+        <div class="campo"><label for="f-escala">Tamanho dos títulos</label>
+          <div class="deslize"><input id="f-escala" type="range" min="0.8" max="1.3" step="0.05"><output id="o-escala"></output></div>
+        </div>
+      </div>
+      <div class="bloco">
+        <h3>Prévia</h3>
+        <p class="desc">É assim que fica no site.</p>
+        <div class="previa" id="previa">
+          <div class="rot">Serviços</div>
+          <h4>Escolha o seu cuidado</h4>
+          <p>Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.</p>
+          <span class="bt">Agendar pelo WhatsApp</span>
+        </div>
+        <div style="padding-bottom:16px"><button class="btn linha mini" id="restaurar-cores">Voltar às cores originais</button></div>
+      </div>
+    </div>
+
+    <!-- CONTATO -->
+    <div class="pg esconde" id="pg-contato">
+      <h1 class="titulo-pg">Contato e links</h1>
+      <p class="legenda">Estes campos alimentam todos os botões do site de uma vez: menu, serviços, rodapé e o botão flutuante.</p>
+      <div id="campos-contato"></div>
+    </div>
+
+    <!-- CONTA -->
+    <div class="pg esconde" id="pg-conta">
+      <h1 class="titulo-pg">Minha conta</h1>
+      <p class="legenda">Você está no painel como <b id="meu-email"></b>.</p>
+      <div class="bloco">
+        <h3>Trocar a senha</h3>
+        <p class="desc">Se fizer muito tempo que você entrou, o Firebase pode pedir que saia e entre de novo antes de trocar.</p>
+        <div class="campo" style="max-width:340px"><label for="n-senha">Nova senha</label><input id="n-senha" type="password" minlength="6" autocomplete="new-password"></div>
+        <p class="erro" id="s-erro"></p>
+        <div style="padding-bottom:16px"><button class="btn" id="trocar-senha">Salvar nova senha</button></div>
+      </div>
+      <div class="bloco">
+        <h3>Fechar o cadastro de novas contas</h3>
+        <p class="desc">Depois que sua conta existe, ninguém mais vira administrador por aqui — mas convém fechar a porta no Firebase: Authentication → Settings → User actions → desmarque "Enable create (sign-up)".</p>
+        <div style="padding-bottom:16px"><a class="btn linha" href="https://console.firebase.google.com/" target="_blank" rel="noopener">Abrir o console do Firebase ↗</a></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="barra">
+    <span class="estado" id="estado">Tudo salvo</span>
+    <button class="btn linha" id="descartar">Descartar</button>
+    <button class="btn" id="salvar">Salvar alterações</button>
+  </div>
+</section>
+
+<div id="recado"></div>
+
+<script type="module">
+import { PADRAO, mesclar, FONTES_TITULO, FONTES_TEXTO, urlDasFontes } from "./assets/padrao.js";
+
+const $  = (s, e = document) => e.querySelector(s);
+const $$ = (s, e = document) => [...e.querySelectorAll(s)];
+
+let FB, CFG, sujo = false, criandoConta = false;
+
+const recado = (texto, ruim = false) => {
+  const r = $("#recado");
+  r.textContent = texto;
+  r.classList.toggle("ruim", ruim);
+  r.classList.add("on");
+  clearTimeout(recado.t);
+  recado.t = setTimeout(() => r.classList.remove("on"), 3200);
+};
+
+const marcarSujo = (v = true) => {
+  sujo = v;
+  $("#estado").textContent = v ? "Você tem alterações não salvas" : "Tudo salvo";
+  $("#estado").classList.toggle("sujo", v);
+};
+
+addEventListener("beforeunload", e => { if(sujo){ e.preventDefault(); e.returnValue = ""; } });
+
+/* ============================================================
+   ENTRADA
+   ============================================================ */
+(async () => {
+  try{
+    FB = await import("./assets/firebase.js");
+  }catch(e){
+    $("#carregando").innerHTML = "Não deu para falar com o Firebase.<br>Confira as chaves em <b>assets/chaves.js</b>.";
+    console.error(e);
+    return;
+  }
+
+  let temAdmin = true;
+  try { temAdmin = await FB.jaTemAdmin(); }
+  catch(e){ console.warn("Não deu para checar o primeiro acesso:", e); }
+
+  FB.aoMudarLogin(async (user) => {
+    if(criandoConta) return;
+    if(!user){
+      $("#carregando").classList.add("esconde");
+      $(temAdmin ? "#form-entrar" : "#form-criar").classList.remove("esconde");
+      return;
+    }
+    if(await FB.ehAdmin(user.uid)){
+      await abrirPainel(user);
+    }else{
+      await FB.sair();
+      $("#carregando").classList.add("esconde");
+      $("#form-entrar").classList.remove("esconde");
+      $("#e-erro").textContent = "Esta conta não tem acesso ao painel.";
+    }
+  });
+})();
+
+/* criar o primeiro administrador */
+$("#form-criar").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const email = $("#c-email").value.trim();
+  const s1 = $("#c-senha").value, s2 = $("#c-senha2").value;
+  const erro = $("#c-erro");
+  if(s1 !== s2) return erro.textContent = "As duas senhas estão diferentes.";
+  if(s1.length < 6) return erro.textContent = "A senha precisa ter pelo menos 6 caracteres.";
+  erro.textContent = "";
+
+  const bt = ev.submitter; bt.disabled = true; bt.textContent = "Criando…";
+  criandoConta = true;
+  try{
+    const user = await FB.criarPrimeiroAdmin(email, s1);
+    criandoConta = false;
+    await abrirPainel(user);
+    recado("Conta criada. Bem-vinda ao painel!");
+  }catch(e){
+    criandoConta = false;
+    erro.textContent = FB.explicarErro(e);
+    console.error(e);
+  }finally{
+    bt.disabled = false; bt.textContent = "Criar minha conta";
+  }
+});
+
+/* login */
+$("#form-entrar").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const bt = ev.submitter; bt.disabled = true; bt.textContent = "Entrando…";
+  $("#e-erro").textContent = "";
+  try{
+    await FB.entrar($("#e-email").value.trim(), $("#e-senha").value);
+  }catch(e){
+    $("#e-erro").textContent = FB.explicarErro(e);
+  }finally{
+    bt.disabled = false; bt.textContent = "Entrar";
+  }
+});
+
+$("#esqueci").addEventListener("click", async () => {
+  const email = $("#e-email").value.trim();
+  if(!email) return $("#e-erro").textContent = "Escreva seu e-mail acima primeiro.";
+  try{
+    await FB.recuperarSenha(email);
+    $("#e-erro").textContent = "";
+    recado("Link de nova senha enviado para o seu e-mail.");
+  }catch(e){ $("#e-erro").textContent = FB.explicarErro(e); }
+});
+
+$("#sair").addEventListener("click", async () => {
+  if(sujo && !confirm("Você tem alterações não salvas. Sair mesmo assim?")) return;
+  marcarSujo(false);
+  await FB.sair();
+  location.reload();
+});
+
+/* ============================================================
+   ABERTURA DO PAINEL
+   ============================================================ */
+async function abrirPainel(user){
+  $("#entrada").classList.add("esconde");
+  $("#painel").classList.remove("esconde");
+  $("#meu-email").textContent = user.email || "";
+
+  let salvo = null;
+  try { salvo = await FB.lerConfig(); }
+  catch(e){ recado("Não deu para ler as configurações.", true); }
+  CFG = mesclar(PADRAO, salvo || {});
+
+  montarTextos();
+  montarContato();
+  montarAparencia();
+  await montarFotos();
+  await carregarAvaliacoes();
+  marcarSujo(false);
+}
+
+/* navegação por abas */
+$$(".aba").forEach(b => b.addEventListener("click", () => {
+  $$(".aba").forEach(x => x.classList.toggle("on", x === b));
+  $$(".pg").forEach(p => p.classList.toggle("esconde", p.id !== "pg-" + b.dataset.aba));
+  scrollTo({ top: 0 });
+}));
+
+/* ============================================================
+   CAMPOS GENÉRICOS
+   ============================================================ */
+const pegar = (caminho) => caminho.split(".").reduce((o, k) => o?.[k], CFG);
+const definir = (caminho, valor) => {
+  const partes = caminho.split(".");
+  const ultima = partes.pop();
+  partes.reduce((o, k) => o[k], CFG)[ultima] = valor;
+  marcarSujo();
+};
+
+/* <br> vira quebra de linha na edição, e volta a ser <br> ao salvar */
+const paraTela  = (t) => String(t ?? "").replace(/<br\s*\/?>/gi, "\n");
+const paraSite  = (t) => String(t ?? "").trim().replace(/\n+/g, "<br>");
+
+function campo(caminho, rotulo, tipo = "texto", ajuda = ""){
+  const id = "cp-" + caminho.replace(/\./g, "-");
+  const valor = paraTela(pegar(caminho));
+  const entrada = tipo === "area"
+    ? `<textarea id="${id}">${valor.replace(/</g, "&lt;")}</textarea>`
+    : `<input id="${id}" type="text" value="${String(valor).replace(/"/g, "&quot;")}">`;
+  return `<div class="campo"><label for="${id}">${rotulo}</label>${entrada}${ajuda ? `<div class="ajuda">${ajuda}</div>` : ""}</div>`;
+}
+
+function ligarCampos(raiz){
+  $$("input[type=text],textarea", raiz).forEach(el => {
+    if(!el.id.startsWith("cp-")) return;
+    const caminho = el.id.slice(3).replace(/-/g, ".");
+    el.addEventListener("input", () => definir(caminho, el.tagName === "TEXTAREA" ? paraSite(el.value) : el.value.trim()));
+  });
+}
+
+/* ============================================================
+   ABA TEXTOS
+   ============================================================ */
+function montarTextos(){
+  const b = (titulo, desc, html) => `<div class="bloco"><h3>${titulo}</h3><p class="desc">${desc}</p>${html}</div>`;
+  let h = "";
+
+  h += b("Marca", "Aparece no topo, no rodapé e no título da aba do navegador.",
+    `<div class="dupla">
+      ${campo("marca.nome1", "Nome — primeira parte")}
+      ${campo("marca.nome2", "Nome — parte em destaque")}
+      ${campo("marca.local", "Cidade")}
+      ${campo("marca.slogan", "Assinatura do rodapé")}
+    </div>${campo("marca.resumo", "Frase do rodapé", "area")}`);
+
+  h += b("Primeira dobra", "O que a cliente lê antes de rolar a página.",
+    `${campo("hero.rotulo", "Etiqueta pequena")}
+     <div class="dupla">
+      ${campo("hero.titulo1", "Título — linha 1")}
+      ${campo("hero.titulo2", "Título — linha 2")}
+     </div>
+     ${campo("hero.titulo3", "Título — linha 3 (em itálico rosa)")}
+     ${campo("hero.texto", "Parágrafo", "area")}
+     <div class="dupla">
+      ${campo("hero.btn1", "Botão principal")}
+      ${campo("hero.btn2", "Botão secundário")}
+      ${campo("hero.selo1", "Selo 1")}
+      ${campo("hero.selo2", "Selo 2")}
+     </div>`);
+
+  h += b("Sobre o studio", "A seção que apresenta você.",
+    `<div class="dupla">${campo("sobre.rotulo", "Etiqueta")}${campo("sobre.titulo", "Título")}</div>
+     ${campo("sobre.p1", "Primeiro parágrafo", "area")}
+     ${campo("sobre.p2", "Segundo parágrafo", "area")}
+     <div class="dupla">${campo("sobre.profissional", "Nome no selo redondo")}${campo("sobre.cargo", "Função no selo redondo")}</div>
+     ${[0,1,2].map(i => `<div class="dupla">${campo(`sobre.pontos.${i}.titulo`, `Ponto ${i+1} — título`)}${campo(`sobre.pontos.${i}.texto`, `Ponto ${i+1} — descrição`)}</div>`).join("")}`);
+
+  h += b("Serviços", "Desmarque um serviço para escondê-lo do site sem apagar o texto.",
+    `<div class="dupla">${campo("servicos.rotulo", "Etiqueta")}${campo("servicos.titulo", "Título")}</div>
+     ${campo("servicos.nota", "Frase sobre os valores", "area")}
+     ${[0,1,2,3].map(i => `
+      <div style="border-top:1px solid var(--borda);padding-top:16px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--suave);margin-bottom:10px">
+          <input type="checkbox" class="ver-servico" data-i="${i}" ${CFG.servicos.itens[i].visivel === false ? "" : "checked"}> Mostrar no site
+        </label>
+        <div class="dupla">${campo(`servicos.itens.${i}.nome`, `Serviço ${i+1} — nome`)}${campo(`servicos.itens.${i}.preco`, "Preço")}</div>
+        ${campo(`servicos.itens.${i}.texto`, "Descrição", "area")}
+      </div>`).join("")}`);
+
+  h += b("Por que as clientes voltam", "Os quatro quadros da faixa escura.",
+    `<div class="dupla">${campo("diferenciais.rotulo", "Etiqueta")}${campo("diferenciais.titulo", "Título")}</div>
+     ${[0,1,2,3].map(i => `<div class="dupla">${campo(`diferenciais.itens.${i}.titulo`, `Quadro ${i+1} — título`)}${campo(`diferenciais.itens.${i}.texto`, `Quadro ${i+1} — texto`, "area")}</div>`).join("")}`);
+
+  h += b("Galeria, depoimentos e finais", "Os títulos das últimas seções.",
+    `<div class="dupla">
+      ${campo("galeria.rotulo", "Galeria — etiqueta")}${campo("galeria.titulo", "Galeria — título")}
+      ${campo("galeria.botao", "Galeria — botão")}
+      ${campo("depoimentos.rotulo", "Depoimentos — etiqueta")}${campo("depoimentos.titulo", "Depoimentos — título")}
+      ${campo("depoimentos.botao", "Depoimentos — botão")}
+     </div>
+     ${campo("depoimentos.convite", "Convite para avaliar", "area")}
+     <div class="dupla">
+      ${campo("local.rotulo", "Localização — etiqueta")}${campo("local.titulo", "Localização — título")}
+      ${campo("final.rotulo", "Chamada final — etiqueta")}${campo("final.titulo", "Chamada final — título")}
+      ${campo("final.botao", "Chamada final — botão")}
+     </div>
+     ${campo("final.texto", "Chamada final — parágrafo", "area")}`);
+
+  h += b("Letreiro", "A faixa que corre logo abaixo da primeira dobra. Separe por vírgula.",
+    campo("letreiro_txt", "Palavras", "area"));
+
+  const raiz = $("#campos-textos");
+  raiz.innerHTML = h;
+
+  // o letreiro é um caso à parte (vira lista)
+  const cl = $("#cp-letreiro_txt");
+  cl.value = CFG.letreiro.join(", ");
+  cl.addEventListener("input", () => {
+    CFG.letreiro = cl.value.split(",").map(s => s.trim()).filter(Boolean);
+    marcarSujo();
+  });
+
+  ligarCampos(raiz);
+  $$(".ver-servico", raiz).forEach(c => c.addEventListener("change", () => {
+    CFG.servicos.itens[+c.dataset.i].visivel = c.checked;
+    marcarSujo();
+  }));
+}
+
+/* ============================================================
+   ABA CONTATO
+   ============================================================ */
+function montarContato(){
+  const raiz = $("#campos-contato");
+  raiz.innerHTML = `
+    <div class="bloco"><h3>WhatsApp</h3><p class="desc">O número precisa ter 55 + DDD + número, só dígitos.</p>
+      <div class="dupla">
+        ${campo("contato.whatsapp", "Número para o link", "texto", "Exemplo: 5593991797198")}
+        ${campo("contato.whatsappTexto", "Como aparece escrito", "texto", "Exemplo: (93) 9179-7198")}
+      </div>
+      ${campo("contato.mensagem", "Mensagem que já vem digitada", "area")}
+    </div>
+    <div class="bloco"><h3>Instagram</h3><p class="desc">O endereço completo do perfil.</p>
+      <div class="dupla">
+        ${campo("contato.instagram", "Endereço do perfil")}
+        ${campo("contato.instagramUsuario", "Arroba que aparece no site")}
+      </div>
+    </div>
+    <div class="bloco"><h3>Endereço</h3><p class="desc">A busca alimenta o mapa que aparece na página; o link é o botão "Abrir no Google Maps".</p>
+      <div class="dupla">
+        ${campo("contato.endereco", "Endereço escrito")}
+        ${campo("contato.horario", "Horário de atendimento")}
+        ${campo("contato.mapsBusca", "Busca do mapa", "texto", "Nome e cidade, como você buscaria no Google Maps")}
+        ${campo("contato.mapsLink", "Link do Google Maps")}
+      </div>
+    </div>`;
+  ligarCampos(raiz);
+}
+
+/* ============================================================
+   ABA APARÊNCIA
+   ============================================================ */
+const CORES = [
+  ["corFundo",    "Fundo da página"],
+  ["corTexto",    "Cor do texto"],
+  ["corPrimaria", "Cor principal"],
+  ["corDourada",  "Detalhes dourados"],
+  ["corEscura",   "Faixas escuras"]
+];
+
+function montarAparencia(){
+  $("#cores").innerHTML = CORES.map(([k, r]) => `
+    <label class="cor">
+      <input type="color" data-cor="${k}" value="${CFG.aparencia[k]}">
+      <div><b>${r}</b><input type="text" data-hex="${k}" value="${CFG.aparencia[k]}" maxlength="7"></div>
+    </label>`).join("");
+
+  $$("[data-cor]").forEach(el => el.addEventListener("input", () => {
+    CFG.aparencia[el.dataset.cor] = el.value;
+    $(`[data-hex="${el.dataset.cor}"]`).value = el.value;
+    marcarSujo(); previa();
+  }));
+  $$("[data-hex]").forEach(el => el.addEventListener("input", () => {
+    if(!/^#[0-9a-f]{6}$/i.test(el.value)) return;
+    CFG.aparencia[el.dataset.hex] = el.value;
+    $(`[data-cor="${el.dataset.hex}"]`).value = el.value;
+    marcarSujo(); previa();
+  }));
+
+  $("#f-titulo").innerHTML = FONTES_TITULO.map(f => `<option ${f.nome === CFG.aparencia.fonteTitulos ? "selected" : ""}>${f.nome}</option>`).join("");
+  $("#f-texto").innerHTML  = FONTES_TEXTO.map(f => `<option ${f.nome === CFG.aparencia.fonteTexto ? "selected" : ""}>${f.nome}</option>`).join("");
+  $("#f-titulo").addEventListener("change", e => { CFG.aparencia.fonteTitulos = e.target.value; marcarSujo(); previa(); });
+  $("#f-texto").addEventListener("change",  e => { CFG.aparencia.fonteTexto   = e.target.value; marcarSujo(); previa(); });
+
+  $("#f-base").value = CFG.aparencia.tamanhoBase;
+  $("#f-escala").value = CFG.aparencia.escalaTitulos;
+  $("#f-base").addEventListener("input", e => { CFG.aparencia.tamanhoBase = +e.target.value; marcarSujo(); previa(); });
+  $("#f-escala").addEventListener("input", e => { CFG.aparencia.escalaTitulos = +e.target.value; marcarSujo(); previa(); });
+
+  $("#restaurar-cores").addEventListener("click", () => {
+    CFG.aparencia = { ...PADRAO.aparencia };
+    montarAparencia(); marcarSujo(); previa();
+    recado("Cores e fontes originais restauradas. Salve para valer no site.");
+  });
+
+  previa();
+}
+
+function previa(){
+  const a = CFG.aparencia;
+  const p = $("#previa");
+  const fontes = $("#previa-fontes") || Object.assign(document.head.appendChild(document.createElement("link")), { id: "previa-fontes", rel: "stylesheet" });
+  fontes.href = urlDasFontes(a.fonteTitulos, a.fonteTexto);
+
+  p.style.background = a.corFundo;
+  p.style.color = a.corTexto;
+  p.style.fontSize = a.tamanhoBase + "px";
+  $(".rot", p).style.color = a.corPrimaria;
+  $("h4", p).style.fontFamily = `'${a.fonteTitulos}', serif`;
+  $("h4", p).style.fontSize = (1.9 * (a.escalaTitulos || 1)) + "rem";
+  p.style.fontFamily = `'${a.fonteTexto}', sans-serif`;
+  const bt = $(".bt", p);
+  bt.style.background = a.corEscura;
+  bt.style.color = a.corFundo;
+  $("#o-base").value = a.tamanhoBase + "px";
+  $("#o-escala").value = Math.round(a.escalaTitulos * 100) + "%";
+}
+
+/* ============================================================
+   ABA FOTOS
+   ============================================================ */
+const ROTULOS_FOTO = {
+  hero:  "Foto principal",
+  sobre: "Foto do studio",
+  s1: "Serviço 1", s2: "Serviço 2", s3: "Serviço 3", s4: "Serviço 4"
+};
+
+/* reduz a imagem no navegador antes de guardar */
+function comprimir(arquivo, larguraMax = 1200, alvoKB = 380){
+  return new Promise((ok, falha) => {
+    const leitor = new FileReader();
+    leitor.onerror = () => falha(new Error("Não deu para ler o arquivo."));
+    leitor.onload = () => {
+      const img = new Image();
+      img.onerror = () => falha(new Error("Esse arquivo não parece uma imagem."));
+      img.onload = () => {
+        const escala = Math.min(1, larguraMax / img.width);
+        const c = document.createElement("canvas");
+        c.width  = Math.round(img.width * escala);
+        c.height = Math.round(img.height * escala);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        let q = 0.78, saida = c.toDataURL("image/jpeg", q);
+        while(saida.length / 1024 > alvoKB && q > 0.35){
+          q -= 0.08;
+          saida = c.toDataURL("image/jpeg", q);
+        }
+        ok(saida);
+      };
+      img.src = leitor.result;
+    };
+    leitor.readAsDataURL(arquivo);
+  });
+}
+
+let cacheMidia = {};
+
+async function montarFotos(){
+  try{
+    const refs = [...Object.values(CFG.imagens), ...CFG.galeriaFotos];
+    cacheMidia = await FB.lerVariasMidias(FB.idsDeMidia(refs));
+  }catch(e){ console.warn(e); }
+
+  const cartao = (chave, rotulo, ref) => {
+    const url = FB.resolverFoto(ref, cacheMidia);
+    return `<div class="foto" data-chave="${chave}">
+      <div class="quadro" style="${url ? `background-image:url('${url.replace(/'/g, "%27")}')` : ""}">${url ? "" : "JK"}</div>
+      <div class="corpo">
+        <b>${rotulo}</b>
+        <input type="text" placeholder="ou cole o endereço de uma foto" value="${ref?.startsWith("midia:") ? "" : (ref || "")}">
+        <div class="acoes">
+          <button class="btn mini enviar">Enviar foto</button>
+          <button class="btn mini perigo tirar" ${ref ? "" : "disabled"}>Tirar</button>
+        </div>
+        <span class="progresso"></span>
+        <input type="file" accept="image/*">
+      </div>
+    </div>`;
+  };
+
+  $("#fotos-secoes").innerHTML = Object.entries(ROTULOS_FOTO)
+    .map(([k, r]) => cartao("imagens." + k, r, CFG.imagens[k])).join("");
+  $("#fotos-galeria").innerHTML = CFG.galeriaFotos
+    .map((ref, i) => cartao("galeriaFotos." + i, "Trabalho " + (i + 1), ref)).join("");
+
+  $$(".foto").forEach(ligarFoto);
+}
+
+function ligarFoto(cartao){
+  const chave = cartao.dataset.chave;
+  const arquivo = $("input[type=file]", cartao);
+  const texto   = $("input[type=text]", cartao);
+  const quadro  = $(".quadro", cartao);
+  const passo   = $(".progresso", cartao);
+  const btTirar = $(".tirar", cartao);
+
+  const pintar = (url) => {
+    quadro.style.backgroundImage = url ? `url('${url.replace(/'/g, "%27")}')` : "";
+    quadro.textContent = url ? "" : "JK";
+    btTirar.disabled = !url;
+  };
+
+  $(".enviar", cartao).addEventListener("click", () => arquivo.click());
+
+  arquivo.addEventListener("change", async () => {
+    const f = arquivo.files[0];
+    if(!f) return;
+    passo.textContent = "Preparando a foto…";
+    try{
+      const galeria = chave.startsWith("galeriaFotos");
+      const dataUrl = await comprimir(f, galeria ? 900 : 1200, galeria ? 240 : 380);
+      passo.textContent = "Enviando…";
+      const antigo = pegar(chave);
+      const ref = await FB.guardarMidia(dataUrl);
+      cacheMidia[ref.slice(6)] = dataUrl;
+      definir(chave, ref);
+      texto.value = "";
+      pintar(dataUrl);
+      if(antigo?.startsWith("midia:")) FB.apagarMidia(antigo);
+      passo.textContent = "";
+      recado("Foto enviada. Salve para ela aparecer no site.");
+    }catch(e){
+      passo.textContent = "";
+      recado(e.message || "Não deu para enviar a foto.", true);
+      console.error(e);
+    }finally{
+      arquivo.value = "";
+    }
+  });
+
+  texto.addEventListener("input", () => {
+    const v = texto.value.trim();
+    definir(chave, v);
+    pintar(v);
+  });
+
+  btTirar.addEventListener("click", () => {
+    const antigo = pegar(chave);
+    if(antigo?.startsWith("midia:")) FB.apagarMidia(antigo);
+    definir(chave, "");
+    texto.value = "";
+    pintar("");
+  });
+}
+
+/* ============================================================
+   AVALIAÇÕES
+   ============================================================ */
+const quando = (t) => t?.seconds ? new Date(t.seconds * 1000).toLocaleDateString("pt-BR") : "";
+const seguro = (t) => String(t ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+async function carregarAvaliacoes(){
+  let lista = [];
+  try{ lista = await FB.todasAvaliacoes(); }
+  catch(e){ recado("Não deu para ler as avaliações.", true); console.error(e); }
+
+  const pendentes = lista.filter(a => !a.aprovado);
+  const aprovadas = lista.filter(a => a.aprovado);
+
+  const selo = $("#conta-pendentes");
+  selo.textContent = pendentes.length;
+  selo.classList.toggle("esconde", pendentes.length === 0);
+
+  const bloco = (a) => `
+    <div class="av ${a.aprovado ? "" : "pendente"}" data-id="${a.id}">
+      <div class="topo">
+        <span class="nome">${seguro(a.nome)}</span>
+        <span class="estrelas">${"★".repeat(a.nota)}${"☆".repeat(5 - a.nota)}</span>
+        <span class="data">${quando(a.criadoEm)}</span>
+      </div>
+      <p>${seguro(a.texto)}</p>
+      <div class="acoes">
+        ${a.aprovado
+          ? `<button class="btn linha mini" data-acao="esconder">Tirar do site</button>`
+          : `<button class="btn mini" data-acao="aprovar">Publicar no site</button>`}
+        <button class="btn perigo mini" data-acao="excluir">Excluir</button>
+      </div>
+    </div>`;
+
+  $("#lista-pendentes").innerHTML = pendentes.length
+    ? pendentes.map(bloco).join("")
+    : `<div class="vazio">Nenhuma avaliação esperando. Quando uma cliente enviar, ela aparece aqui.</div>`;
+  $("#lista-aprovadas").innerHTML = aprovadas.length
+    ? aprovadas.map(bloco).join("")
+    : `<div class="vazio">Nenhuma avaliação publicada ainda.</div>`;
+
+  $$(".av [data-acao]").forEach(bt => bt.addEventListener("click", async () => {
+    const id = bt.closest(".av").dataset.id;
+    const acao = bt.dataset.acao;
+    if(acao === "excluir" && !confirm("Excluir esta avaliação? Não dá para desfazer.")) return;
+    bt.disabled = true;
+    try{
+      if(acao === "aprovar")  await FB.aprovarAvaliacao(id, true);
+      if(acao === "esconder") await FB.aprovarAvaliacao(id, false);
+      if(acao === "excluir")  await FB.excluirAvaliacao(id);
+      await carregarAvaliacoes();
+      recado(acao === "aprovar" ? "Publicada no site." : acao === "esconder" ? "Tirada do site." : "Avaliação excluída.");
+    }catch(e){
+      bt.disabled = false;
+      recado(FB.explicarErro(e), true);
+    }
+  }));
+}
+
+/* ============================================================
+   SALVAR
+   ============================================================ */
+$("#salvar").addEventListener("click", async () => {
+  const bt = $("#salvar");
+  bt.disabled = true; bt.textContent = "Salvando…";
+  try{
+    await FB.salvarConfig(CFG);
+    marcarSujo(false);
+    recado("Salvo. Recarregue o site para ver.");
+  }catch(e){
+    recado(FB.explicarErro(e), true);
+    console.error(e);
+  }finally{
+    bt.disabled = false; bt.textContent = "Salvar alterações";
+  }
+});
+
+$("#descartar").addEventListener("click", async () => {
+  if(sujo && !confirm("Descartar as alterações que você fez desde o último salvamento?")) return;
+  const salvo = await FB.lerConfig();
+  CFG = mesclar(PADRAO, salvo || {});
+  montarTextos(); montarContato(); montarAparencia(); await montarFotos();
+  marcarSujo(false);
+  recado("Alterações descartadas.");
+});
+
+/* trocar senha */
+$("#trocar-senha").addEventListener("click", async () => {
+  const nova = $("#n-senha").value;
+  const erro = $("#s-erro");
+  if(nova.length < 6) return erro.textContent = "A senha precisa ter pelo menos 6 caracteres.";
+  erro.textContent = "";
+  try{
+    await FB.trocarSenha(nova);
+    $("#n-senha").value = "";
+    recado("Senha trocada.");
+  }catch(e){ erro.textContent = FB.explicarErro(e); }
+});
+</script>
+</body>
+</html>

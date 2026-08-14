@@ -1,0 +1,86 @@
+rules_version = '2';
+
+// ============================================================
+//  STUDIO JK BEAUTY — regras do Firestore
+//  Cole no Console do Firebase → Firestore Database → Regras → Publicar.
+//
+//  Resumo:
+//   · Qualquer visitante LÊ o conteúdo do site e as avaliações aprovadas.
+//   · Qualquer visitante ENVIA avaliação, mas sempre como não aprovada.
+//   · Só quem está em admins/{uid} altera qualquer coisa.
+//   · A conta de administrador só pode ser criada UMA vez.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{banco}/documents {
+
+    function ehAdmin() {
+      return request.auth != null
+        && exists(/databases/$(banco)/documents/admins/$(request.auth.uid));
+    }
+
+    function portaAberta() {
+      return !exists(/databases/$(banco)/documents/meta/bootstrap);
+    }
+
+    // ---- Conteúdo do site: textos, cores, fontes, contatos ----
+    match /config/{doc} {
+      allow read:  if true;
+      allow write: if ehAdmin();
+    }
+
+    // ---- Fotos enviadas pelo painel (imagem comprimida) ----
+    match /midia/{id} {
+      allow read:   if true;
+      allow create: if ehAdmin() && request.resource.data.dados is string
+                    && request.resource.data.dados.size() < 900000;
+      allow delete: if ehAdmin();
+      allow update: if false;
+    }
+
+    // ---- Avaliações das clientes ----
+    match /reviews/{id} {
+      allow read: if resource.data.aprovado == true || ehAdmin();
+
+      allow create: if request.resource.data.keys().hasOnly(['nome','nota','texto','aprovado','criadoEm'])
+                    && request.resource.data.aprovado == false
+                    && request.resource.data.nome is string
+                    && request.resource.data.nome.size() >= 2
+                    && request.resource.data.nome.size() <= 40
+                    && request.resource.data.texto is string
+                    && request.resource.data.texto.size() >= 10
+                    && request.resource.data.texto.size() <= 400
+                    && request.resource.data.nota is number
+                    && request.resource.data.nota >= 1
+                    && request.resource.data.nota <= 5;
+
+      allow update, delete: if ehAdmin();
+    }
+
+    // ---- Quem pode entrar no painel ----
+    match /admins/{uid} {
+      // cada admin consegue conferir o próprio acesso
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list: if ehAdmin();
+
+      // o PRIMEIRO cadastro vira administrador; depois disso, nunca mais
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && portaAberta();
+
+      allow update, delete: if false;
+    }
+
+    // ---- Trava do primeiro acesso ----
+    match /meta/bootstrap {
+      allow read:   if true;
+      allow create: if request.auth != null && portaAberta();
+      allow update, delete: if false;
+    }
+
+    // ---- Nada além do que está acima ----
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}
