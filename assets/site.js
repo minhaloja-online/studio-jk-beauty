@@ -4,14 +4,14 @@
    os efeitos. Se o Firebase não responder, o site continua
    funcionando com o conteúdo padrão — nunca fica em branco.
    ============================================================ */
-import { PADRAO, mesclar, valorEm, urlDasFontes } from "./padrao.js";
+import { PADRAO, mesclar, migrar, valorEm, urlDasFontes } from "./padrao.js";
 
 const $  = (s, e = document) => e.querySelector(s);
 const $$ = (s, e = document) => [...e.querySelectorAll(s)];
 const semMovimento = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const podeHover = matchMedia("(hover:hover)").matches;
 
-let CFG = structuredClone(PADRAO);
+let CFG = migrar(structuredClone(PADRAO));
 let FB = null;               // módulo do Firebase (carregado depois)
 let fotosGaleria = [];       // já resolvidas para exibição
 
@@ -67,12 +67,6 @@ function aplicarTextos(cfg){
     if(typeof v === "string") el.innerHTML = v;
   });
 
-  // serviços escondidos pelo painel
-  $$("[data-servico]").forEach(card => {
-    const item = cfg.servicos.itens[+card.dataset.servico];
-    card.classList.toggle("oculto", item && item.visivel === false);
-  });
-
   document.title = `${cfg.marca.nome1} ${cfg.marca.nome2} | ${cfg.marca.resumo}`.slice(0, 90);
 }
 
@@ -90,7 +84,6 @@ function aplicarContato(c){
     el.setAttribute("rel", "noopener");
   };
   $$("[data-zap]").forEach(el => abrir(el, zap()));
-  $$("[data-zap-servico]").forEach(el => abrir(el, zap(CFG.servicos.itens[+el.dataset.zapServico]?.nome)));
   $$("[data-insta]").forEach(el => abrir(el, c.instagram));
   $$("[data-mapa]").forEach(el => abrir(el, c.mapsLink));
   $("#frame-mapa").src = "https://www.google.com/maps?q=" + encodeURIComponent(c.mapsBusca) + "&output=embed";
@@ -108,7 +101,7 @@ function pintarFoto(chave, url){
 }
 
 async function aplicarFotos(cfg){
-  const refs = [...Object.values(cfg.imagens), ...cfg.galeriaFotos];
+  const refs = [...Object.values(cfg.imagens), ...cfg.galeriaFotos, ...cfg.servicos.itens.map(i => i.foto)];
   let cache = {};
   if(FB){
     try { cache = await FB.lerVariasMidias(FB.idsDeMidia(refs)); } catch {}
@@ -118,6 +111,7 @@ async function aplicarFotos(cfg){
   Object.entries(cfg.imagens).forEach(([k, v]) => pintarFoto(k, resolver(v)));
   fotosGaleria = cfg.galeriaFotos.map(resolver);
   montarGaleria();
+  montarServicos(resolver);
 }
 
 /* ------------------------------------------------------------
@@ -134,6 +128,40 @@ function montarLetreiro(lista){
 const svgEstrela = (cheia) =>
   `<svg viewBox="0 0 24 24" fill="${cheia ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.3"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></svg>`;
 const linhaEstrelas = (nota) => [1,2,3,4,5].map(i => svgEstrela(i <= Math.round(nota))).join("");
+
+function montarServicos(resolver = (r) => (r?.startsWith("midia:") ? "" : r || "")){
+  const alvo = $("#grade-serv");
+  if(!alvo) return;
+
+  const itens = CFG.servicos.itens.filter(s => s.visivel !== false && (s.nome || "").trim());
+  if(!itens.length){
+    alvo.innerHTML = `<div class="vazio" style="grid-column:1/-1">Nenhum serviço cadastrado ainda.</div>`;
+    return;
+  }
+
+  const c = CFG.contato;
+  alvo.innerHTML = itens.map((s, i) => {
+    const url = resolver(s.foto);
+    const zap = `https://wa.me/${c.whatsapp}?text=` +
+      encodeURIComponent(`Olá! Vim pelo site e gostaria de agendar: ${s.nome}.`);
+    return `
+    <article class="serv rev" data-atraso="${i % 4}">
+      <div class="arco grao ${url ? "tem-foto" : ""}">
+        <div class="foto" style="${url ? `background-image:url('${url.replace(/'/g, "%27")}')` : ""}"></div>
+        <div class="marca"><b>JK</b><small>Foto</small></div>
+      </div>
+      <h3>${escapar(s.nome)}</h3>
+      <p>${escapar(s.texto || "")}</p>
+      <div class="rodape">
+        <span class="preco">${escapar(s.preco || "")}</span>
+        <a class="marcar" href="${zap}" target="_blank" rel="noopener">Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </article>`;
+  }).join("");
+
+  $$("#grade-serv .rev").forEach(el => olho.observe(el));
+  inclinar($$("#grade-serv .serv"));
+}
 
 function montarGaleria(){
   $("#mosaico").innerHTML = fotosGaleria.map((url, i) => `
@@ -237,7 +265,12 @@ if(!semMovimento && podeHover){
   });
   hero.addEventListener("pointerleave", () => brilho.style.opacity = "0");
 
-  $$(".serv").forEach(card => {
+}
+
+/** Inclinação 3D de acordo com o cursor. */
+function inclinar(cards){
+  if(semMovimento || !podeHover) return;
+  cards.forEach(card => {
     card.addEventListener("pointermove", e => {
       const r = card.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - .5;
@@ -384,6 +417,7 @@ aplicarContato(CFG.contato);
 montarLetreiro(CFG.letreiro);
 fotosGaleria = CFG.galeriaFotos.slice();
 montarGaleria();
+montarServicos();
 
 // e então busca o conteúdo real
 (async () => {
@@ -398,7 +432,7 @@ montarGaleria();
   try{
     const salvo = await FB.lerConfig();
     if(salvo){
-      CFG = mesclar(PADRAO, salvo);
+      CFG = migrar(mesclar(PADRAO, salvo));
       aplicarAparencia(CFG.aparencia);
       aplicarTextos(CFG);
       aplicarContato(CFG.contato);

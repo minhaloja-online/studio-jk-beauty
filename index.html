@@ -177,47 +177,7 @@
       <p class="sub rev" data-atraso="1" style="margin:0" data-txt="servicos.nota">Valores conversados no WhatsApp, de acordo com o tamanho e o estado da unha. Sem surpresa na hora de pagar.</p>
     </div>
 
-    <div class="grade-serv">
-      <article class="serv rev" data-servico="0">
-        <div class="arco grao" data-foto="s1"><div class="foto"></div><div class="marca"><b>JK</b><small>Foto</small></div></div>
-        <h3 data-txt="servicos.itens.0.nome">Manicure</h3>
-        <p data-txt="servicos.itens.0.texto">Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.</p>
-        <div class="rodape">
-          <span class="preco" data-txt="servicos.itens.0.preco">Sob consulta</span>
-          <a class="marcar" data-zap-servico="0">Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        </div>
-      </article>
-
-      <article class="serv rev" data-atraso="1" data-servico="1">
-        <div class="arco grao" data-foto="s2"><div class="foto"></div><div class="marca"><b>JK</b><small>Foto</small></div></div>
-        <h3 data-txt="servicos.itens.1.nome">Pedicure</h3>
-        <p data-txt="servicos.itens.1.texto">Pés cuidados de verdade, com esfoliação e aquele alívio no fim do dia.</p>
-        <div class="rodape">
-          <span class="preco" data-txt="servicos.itens.1.preco">Sob consulta</span>
-          <a class="marcar" data-zap-servico="1">Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        </div>
-      </article>
-
-      <article class="serv rev" data-atraso="2" data-servico="2">
-        <div class="arco grao" data-foto="s3"><div class="foto"></div><div class="marca"><b>JK</b><small>Foto</small></div></div>
-        <h3 data-txt="servicos.itens.2.nome">Unhas em gel</h3>
-        <p data-txt="servicos.itens.2.texto">Alongamento e blindagem para unhas resistentes, com brilho que não cai.</p>
-        <div class="rodape">
-          <span class="preco" data-txt="servicos.itens.2.preco">Sob consulta</span>
-          <a class="marcar" data-zap-servico="2">Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        </div>
-      </article>
-
-      <article class="serv rev" data-atraso="3" data-servico="3">
-        <div class="arco grao" data-foto="s4"><div class="foto"></div><div class="marca"><b>JK</b><small>Foto</small></div></div>
-        <h3 data-txt="servicos.itens.3.nome">Nail Art</h3>
-        <p data-txt="servicos.itens.3.texto">Desenho feito à mão, francesinha, pedraria — traga a referência que a gente faz.</p>
-        <div class="rodape">
-          <span class="preco" data-txt="servicos.itens.3.preco">Sob consulta</span>
-          <a class="marcar" data-zap-servico="3">Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        </div>
-      </article>
-    </div>
+    <div class="grade-serv" id="grade-serv"><!-- montado a partir do que o painel cadastrou --></div>
   </div>
 </section>
 
@@ -430,5 +390,18 @@
 </div>
 
 <script type="module" src="./assets/site.js"></script>
+
+<!-- Rede de segurança: se o JavaScript falhar por qualquer motivo,
+     a tela de abertura sai sozinha e o site aparece mesmo assim. -->
+<script>
+  setTimeout(function(){
+    var c = document.getElementById("carga");
+    if(c && !c.classList.contains("sai")){
+      c.classList.add("sai");
+      document.body.classList.add("pronto");
+      console.warn("A abertura saiu pelo tempo limite — confira os erros acima.");
+    }
+  }, 6000);
+</script>
 </body>
 </html>

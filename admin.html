@@ -97,6 +97,17 @@ input,textarea,select{ font:inherit; }
 .foto input[type=file]{ display:none; }
 .progresso{ font-size:.72rem; color:var(--rosa); }
 
+/* ---------- SERVIÇOS ---------- */
+.serv-adm{ display:grid; grid-template-columns:190px 1fr; gap:16px; align-items:start;
+  border:1px solid var(--borda); border-radius:14px; padding:14px; margin-bottom:14px; background:var(--branco); }
+.serv-adm.escondido{ opacity:.55; }
+.serv-adm .foto{ margin:0; }
+.serv-adm .cabeca{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+.serv-adm .ordem{ display:flex; align-items:center; gap:6px; }
+.serv-adm .ver{ display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--suave); }
+.serv-adm .posicao{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--suave); }
+@media(max-width:700px){ .serv-adm{ grid-template-columns:1fr; } }
+
 /* ---------- APARÊNCIA ---------- */
 .cores{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; margin-bottom:6px; }
 .cor{ display:flex; align-items:center; gap:10px; border:1px solid var(--borda); border-radius:12px; padding:8px 10px; background:var(--porcelana); }
@@ -178,6 +189,7 @@ input,textarea,select{ font:inherit; }
     <div class="marca"><b>Studio JK <i>Beauty</i></b><small>Painel do studio</small></div>
     <button class="aba on" data-aba="avaliacoes">Avaliações <span class="selo esconde" id="conta-pendentes">0</span></button>
     <button class="aba" data-aba="textos">Textos</button>
+    <button class="aba" data-aba="servicos">Serviços</button>
     <button class="aba" data-aba="fotos">Fotos</button>
     <button class="aba" data-aba="aparencia">Aparência</button>
     <button class="aba" data-aba="contato">Contato e links</button>
@@ -204,6 +216,22 @@ input,textarea,select{ font:inherit; }
       <h1 class="titulo-pg">Textos</h1>
       <p class="legenda">Tudo que está escrito no site. Para quebrar uma linha no meio de um título, dê enter — o site respeita a quebra.</p>
       <div id="campos-textos"></div>
+    </div>
+
+    <!-- SERVIÇOS -->
+    <div class="pg esconde" id="pg-servicos">
+      <h1 class="titulo-pg">Serviços</h1>
+      <p class="legenda">O que você cadastrar aqui aparece na seção “Escolha o seu cuidado”. A ordem da lista é a ordem no site.</p>
+      <div class="bloco">
+        <h3>Título da seção</h3>
+        <div id="campos-servicos-topo"></div>
+      </div>
+      <div class="bloco">
+        <h3>Serviços cadastrados</h3>
+        <p class="desc">Desmarque “Mostrar no site” para esconder um serviço sem apagar o que você escreveu.</p>
+        <div id="lista-servicos"></div>
+        <button class="btn" id="add-servico" style="margin-top:14px">+ Adicionar serviço</button>
+      </div>
     </div>
 
     <!-- FOTOS -->
@@ -420,12 +448,13 @@ async function abrirPainel(user){
   let salvo = null;
   try { salvo = await FB.lerConfig(); }
   catch(e){ recado("Não deu para ler as configurações.", true); }
-  CFG = mesclar(PADRAO, salvo || {});
+  CFG = migrar(mesclar(PADRAO, salvo || {}));
 
   montarTextos();
   montarContato();
   montarAparencia();
   await montarFotos();
+  montarServicos();
   await carregarAvaliacoes();
   marcarSujo(false);
 }
@@ -506,18 +535,6 @@ function montarTextos(){
      <div class="dupla">${campo("sobre.profissional", "Nome no selo redondo")}${campo("sobre.cargo", "Função no selo redondo")}</div>
      ${[0,1,2].map(i => `<div class="dupla">${campo(`sobre.pontos.${i}.titulo`, `Ponto ${i+1} — título`)}${campo(`sobre.pontos.${i}.texto`, `Ponto ${i+1} — descrição`)}</div>`).join("")}`);
 
-  h += b("Serviços", "Desmarque um serviço para escondê-lo do site sem apagar o texto.",
-    `<div class="dupla">${campo("servicos.rotulo", "Etiqueta")}${campo("servicos.titulo", "Título")}</div>
-     ${campo("servicos.nota", "Frase sobre os valores", "area")}
-     ${[0,1,2,3].map(i => `
-      <div style="border-top:1px solid var(--borda);padding-top:16px;margin-top:4px">
-        <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--suave);margin-bottom:10px">
-          <input type="checkbox" class="ver-servico" data-i="${i}" ${CFG.servicos.itens[i].visivel === false ? "" : "checked"}> Mostrar no site
-        </label>
-        <div class="dupla">${campo(`servicos.itens.${i}.nome`, `Serviço ${i+1} — nome`)}${campo(`servicos.itens.${i}.preco`, "Preço")}</div>
-        ${campo(`servicos.itens.${i}.texto`, "Descrição", "area")}
-      </div>`).join("")}`);
-
   h += b("Por que as clientes voltam", "Os quatro quadros da faixa escura.",
     `<div class="dupla">${campo("diferenciais.rotulo", "Etiqueta")}${campo("diferenciais.titulo", "Título")}</div>
      ${[0,1,2,3].map(i => `<div class="dupla">${campo(`diferenciais.itens.${i}.titulo`, `Quadro ${i+1} — título`)}${campo(`diferenciais.itens.${i}.texto`, `Quadro ${i+1} — texto`, "area")}</div>`).join("")}`);
@@ -552,10 +569,6 @@ function montarTextos(){
   });
 
   ligarCampos(raiz);
-  $$(".ver-servico", raiz).forEach(c => c.addEventListener("change", () => {
-    CFG.servicos.itens[+c.dataset.i].visivel = c.checked;
-    marcarSujo();
-  }));
 }
 
 /* ============================================================
@@ -662,8 +675,7 @@ function previa(){
    ============================================================ */
 const ROTULOS_FOTO = {
   hero:  "Foto principal",
-  sobre: "Foto do studio",
-  s1: "Serviço 1", s2: "Serviço 2", s3: "Serviço 3", s4: "Serviço 4"
+  sobre: "Foto do studio"
 };
 
 /* reduz a imagem no navegador antes de guardar */
@@ -695,35 +707,123 @@ function comprimir(arquivo, larguraMax = 1200, alvoKB = 380){
 
 let cacheMidia = {};
 
-async function montarFotos(){
+/** Cartão de foto reaproveitado pelas abas Fotos e Serviços. */
+function cartaoFoto(chave, rotulo, ref){
+  const url = FB.resolverFoto(ref, cacheMidia);
+  return `<div class="foto" data-chave="${chave}">
+    <div class="quadro" style="${url ? `background-image:url('${url.replace(/'/g, "%27")}')` : ""}">${url ? "" : "JK"}</div>
+    <div class="corpo">
+      <b>${rotulo}</b>
+      <input type="text" placeholder="ou cole o endereço de uma foto" value="${ref?.startsWith("midia:") ? "" : (ref || "")}">
+      <div class="acoes">
+        <button class="btn mini enviar">Enviar foto</button>
+        <button class="btn mini perigo tirar" ${ref ? "" : "disabled"}>Tirar</button>
+      </div>
+      <span class="progresso"></span>
+      <input type="file" accept="image/*">
+    </div>
+  </div>`;
+}
+
+/** Guarda em cache todas as fotos usadas no site (seções, galeria e serviços). */
+async function carregarCacheDeFotos(){
   try{
-    const refs = [...Object.values(CFG.imagens), ...CFG.galeriaFotos];
+    const refs = [...Object.values(CFG.imagens), ...CFG.galeriaFotos, ...CFG.servicos.itens.map(i => i.foto)];
     cacheMidia = await FB.lerVariasMidias(FB.idsDeMidia(refs));
   }catch(e){ console.warn(e); }
+}
 
-  const cartao = (chave, rotulo, ref) => {
-    const url = FB.resolverFoto(ref, cacheMidia);
-    return `<div class="foto" data-chave="${chave}">
-      <div class="quadro" style="${url ? `background-image:url('${url.replace(/'/g, "%27")}')` : ""}">${url ? "" : "JK"}</div>
-      <div class="corpo">
-        <b>${rotulo}</b>
-        <input type="text" placeholder="ou cole o endereço de uma foto" value="${ref?.startsWith("midia:") ? "" : (ref || "")}">
-        <div class="acoes">
-          <button class="btn mini enviar">Enviar foto</button>
-          <button class="btn mini perigo tirar" ${ref ? "" : "disabled"}>Tirar</button>
+/* ============================================================
+   ABA SERVIÇOS
+   ============================================================ */
+function montarServicos(){
+  const topo = $("#campos-servicos-topo");
+  topo.innerHTML = `<div class="dupla">${campo("servicos.rotulo", "Etiqueta")}${campo("servicos.titulo", "Título")}</div>
+    ${campo("servicos.nota", "Frase sobre os valores", "area")}`;
+  ligarCampos(topo);
+
+  const lista = $("#lista-servicos");
+  const itens = CFG.servicos.itens;
+
+  if(!itens.length){
+    lista.innerHTML = `<p class="desc">Nenhum serviço cadastrado. Use o botão abaixo para criar o primeiro.</p>`;
+    return;
+  }
+
+  lista.innerHTML = itens.map((it, i) => `
+    <div class="serv-adm ${it.visivel === false ? "escondido" : ""}" data-i="${i}">
+      ${cartaoFoto(`servicos.itens.${i}.foto`, "Foto do serviço", it.foto)}
+      <div class="dados">
+        <div class="cabeca">
+          <span class="posicao">${i + 1}º na página</span>
+          <label class="ver"><input type="checkbox" class="ver-servico" ${it.visivel === false ? "" : "checked"}> Mostrar no site</label>
+          <span class="ordem">
+            <button class="btn mini subir" ${i === 0 ? "disabled" : ""} title="Subir">↑</button>
+            <button class="btn mini descer" ${i === itens.length - 1 ? "disabled" : ""} title="Descer">↓</button>
+            <button class="btn mini perigo excluir">Excluir</button>
+          </span>
         </div>
-        <span class="progresso"></span>
-        <input type="file" accept="image/*">
+        <div class="dupla">
+          ${campo(`servicos.itens.${i}.nome`, "Nome do serviço")}
+          ${campo(`servicos.itens.${i}.preco`, "Preço")}
+        </div>
+        ${campo(`servicos.itens.${i}.texto`, "Descrição", "area")}
       </div>
-    </div>`;
-  };
+    </div>`).join("");
+
+  ligarCampos(lista);
+  $$(".foto", lista).forEach(ligarFoto);
+
+  $$(".serv-adm", lista).forEach(cartao => {
+    const i = +cartao.dataset.i;
+
+    $(".ver-servico", cartao).addEventListener("change", e => {
+      CFG.servicos.itens[i].visivel = e.target.checked;
+      cartao.classList.toggle("escondido", !e.target.checked);
+      marcarSujo();
+    });
+
+    const mover = (destino) => {
+      const l = CFG.servicos.itens;
+      [l[i], l[destino]] = [l[destino], l[i]];
+      marcarSujo();
+      montarServicos();
+    };
+    $(".subir", cartao).addEventListener("click", () => { if(i > 0) mover(i - 1); });
+    $(".descer", cartao).addEventListener("click", () => { if(i < CFG.servicos.itens.length - 1) mover(i + 1); });
+
+    $(".excluir", cartao).addEventListener("click", () => {
+      const nome = CFG.servicos.itens[i].nome || "este serviço";
+      if(!confirm(`Excluir "${nome}"? Isso não pode ser desfeito depois de salvar.`)) return;
+      const foto = CFG.servicos.itens[i].foto;
+      CFG.servicos.itens.splice(i, 1);
+      if(foto?.startsWith("midia:")) FB.apagarMidia(foto);
+      marcarSujo();
+      montarServicos();
+    });
+  });
+}
+
+$("#add-servico").addEventListener("click", () => {
+  CFG.servicos.itens.push(SERVICO_NOVO());
+  marcarSujo();
+  montarServicos();
+  const ultimo = $("#lista-servicos").lastElementChild;
+  ultimo?.scrollIntoView({ behavior: "smooth", block: "center" });
+  $("input[type=text]", $(".dados", ultimo))?.focus();
+});
+
+async function montarFotos(){
+  await carregarCacheDeFotos();
+
+  const cartao = cartaoFoto;
 
   $("#fotos-secoes").innerHTML = Object.entries(ROTULOS_FOTO)
     .map(([k, r]) => cartao("imagens." + k, r, CFG.imagens[k])).join("");
   $("#fotos-galeria").innerHTML = CFG.galeriaFotos
     .map((ref, i) => cartao("galeriaFotos." + i, "Trabalho " + (i + 1), ref)).join("");
 
-  $$(".foto").forEach(ligarFoto);
+  $$(".foto", $("#pg-fotos")).forEach(ligarFoto);
 }
 
 function ligarFoto(cartao){
@@ -863,8 +963,8 @@ $("#salvar").addEventListener("click", async () => {
 $("#descartar").addEventListener("click", async () => {
   if(sujo && !confirm("Descartar as alterações que você fez desde o último salvamento?")) return;
   const salvo = await FB.lerConfig();
-  CFG = mesclar(PADRAO, salvo || {});
-  montarTextos(); montarContato(); montarAparencia(); await montarFotos();
+  CFG = migrar(mesclar(PADRAO, salvo || {}));
+  montarTextos(); montarContato(); montarAparencia(); await montarFotos(); montarServicos();
   marcarSujo(false);
   recado("Alterações descartadas.");
 });

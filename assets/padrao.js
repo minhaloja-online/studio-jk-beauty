@@ -45,10 +45,10 @@ export const PADRAO = {
     titulo: "Escolha o seu cuidado",
     nota: "Valores conversados no WhatsApp, de acordo com o tamanho e o estado da unha. Sem surpresa na hora de pagar.",
     itens: [
-      { nome: "Manicure",      texto: "Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.", preco: "Sob consulta", visivel: true },
-      { nome: "Pedicure",      texto: "Pés cuidados de verdade, com esfoliação e aquele alívio no fim do dia.", preco: "Sob consulta", visivel: true },
-      { nome: "Unhas em gel",  texto: "Alongamento e blindagem para unhas resistentes, com brilho que não cai.", preco: "Sob consulta", visivel: true },
-      { nome: "Nail Art",      texto: "Desenho feito à mão, francesinha, pedraria — traga a referência que a gente faz.", preco: "Sob consulta", visivel: true }
+      { nome: "Manicure",      texto: "Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.", preco: "Sob consulta", foto: "", visivel: true },
+      { nome: "Pedicure",      texto: "Pés cuidados de verdade, com esfoliação e aquele alívio no fim do dia.", preco: "Sob consulta", foto: "", visivel: true },
+      { nome: "Unhas em gel",  texto: "Alongamento e blindagem para unhas resistentes, com brilho que não cai.", preco: "Sob consulta", foto: "", visivel: true },
+      { nome: "Nail Art",      texto: "Desenho feito à mão, francesinha, pedraria — traga a referência que a gente faz.", preco: "Sob consulta", foto: "", visivel: true }
     ]
   },
 
@@ -115,11 +115,31 @@ export const PADRAO = {
   /* "" = moldura com o monograma JK
      "midia:ID" = foto enviada pelo painel
      "https://..." = foto hospedada em outro lugar */
-  imagens: { hero: "", sobre: "", s1: "", s2: "", s3: "", s4: "" },
+  imagens: { hero: "", sobre: "" },
   galeriaFotos: ["", "", "", "", "", "", "", ""],
 
   letreiro: ["Manicure", "Pedicure", "Unhas em gel", "Alongamento", "Nail Art", "Francesinha", "Blindagem"]
 };
+
+/* Modelo de um serviço novo criado pelo painel */
+export const SERVICO_NOVO = () =>
+  ({ nome: "Novo serviço", texto: "", preco: "Sob consulta", foto: "", visivel: true });
+
+/* Ajusta configurações salvas antes da mudança em que os serviços
+   passaram a ser uma lista livre com foto própria. Roda toda vez:
+   se já estiver no formato novo, não mexe em nada. */
+export function migrar(cfg){
+  cfg.servicos = cfg.servicos || {};
+  cfg.imagens  = cfg.imagens  || {};
+  const antigas = ["s1", "s2", "s3", "s4"];
+  cfg.servicos.itens = (cfg.servicos.itens || []).map((item, i) => {
+    const pronto = { ...SERVICO_NOVO(), ...item };
+    if(!pronto.foto && cfg.imagens[antigas[i]]) pronto.foto = cfg.imagens[antigas[i]];
+    return pronto;
+  });
+  antigas.forEach(k => delete cfg.imagens[k]);
+  return cfg;
+}
 
 /* Fontes disponíveis no painel.
    "q" é o pedaço exato que vai na URL do Google Fonts — cada família
