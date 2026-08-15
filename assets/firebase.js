@@ -127,20 +127,20 @@ export const excluirAvaliacao = (id) => deleteDoc(doc(db, "reviews", id));
    Só o administrador lê e escreve: é informação do negócio e
    não pode ficar visível para quem abre o site.               */
 
-export async function lancamentosEntre(inicio, fim){
+export async function lancamentosEntre(uid, inicio, fim){
   const q = query(
-    collection(db, "lancamentos"),
+    collection(db, "admins", uid, "lancamentos"),
     where("data", ">=", inicio),
     where("data", "<=", fim),
     orderBy("data", "desc"),
     limit(600)
   );
   const r = await getDocs(q);
-  return r.docs.map(d => ({ id: d.id, ...d.data() }));
+  return r.docs.map(d => ({ id: d.id, uid, ...d.data() }));
 }
 
-export async function salvarLancamento({ tipo, data, valor, descricao, categoria }){
-  return addDoc(collection(db, "lancamentos"), {
+export async function salvarLancamento(uid, { tipo, data, valor, descricao, categoria }){
+  return addDoc(collection(db, "admins", uid, "lancamentos"), {
     tipo,
     data,
     valor: Number(valor),
@@ -150,7 +150,8 @@ export async function salvarLancamento({ tipo, data, valor, descricao, categoria
   });
 }
 
-export const excluirLancamento = (id) => deleteDoc(doc(db, "lancamentos", id));
+export const excluirLancamento = (uid, id) =>
+  deleteDoc(doc(db, "admins", uid, "lancamentos", id));
 
 /* ---------- ACESSO AO PAINEL ---------- */
 
@@ -171,11 +172,52 @@ export const aoMudarLogin = (fn) => onAuthStateChanged(auth, fn);
 export async function criarPrimeiroAdmin(email, senha){
   const cred = await createUserWithEmailAndPassword(auth, email, senha);
   const lote = writeBatch(db);
-  lote.set(doc(db, "admins", cred.user.uid), { email, criadoEm: serverTimestamp() });
+  lote.set(doc(db, "admins", cred.user.uid), { email, papel: "dona", criadoEm: serverTimestamp() });
   lote.set(doc(db, "meta", "bootstrap"), { criadoEm: serverTimestamp() });
   await lote.commit();
   return cred.user;
 }
+
+/** Dados da conta logada: nome, papel e a qual profissional pertence. */
+export async function meuPerfil(uid){
+  const s = await getDoc(doc(db, "admins", uid));
+  return s.exists() ? { uid, ...s.data() } : null;
+}
+
+/** Todas as contas com acesso ao painel (só a dona consegue ler). */
+export async function listarAcessos(){
+  const r = await getDocs(collection(db, "admins"));
+  return r.docs.map(d => ({ uid: d.id, ...d.data() }));
+}
+
+/** Cria o login da segunda profissional sem derrubar a sessão de quem
+    está logada: a conta nasce num app secundário, isolado deste. */
+export async function criarAcessoProfissional({ email, senha, nome, profissionalId }){
+  const { initializeApp, deleteApp } = App;
+  const { getAuth, createUserWithEmailAndPassword, signOut: sair2 } = Auth;
+
+  const app2 = initializeApp(CHAVES_FIREBASE, "criador-" + Date.now());
+  const auth2 = getAuth(app2);
+  try{
+    const cred = await createUserWithEmailAndPassword(auth2, email, senha);
+    await setDoc(doc(db, "admins", cred.user.uid), {
+      email, nome, profissionalId, papel: "profissional", criadoEm: serverTimestamp()
+    });
+    await sair2(auth2);
+    return cred.user.uid;
+  }finally{
+    await deleteApp(app2);
+  }
+}
+
+/** Liga uma conta já criada no Console do Firebase a uma profissional. */
+export async function vincularAcesso({ uid, email, nome, profissionalId }){
+  await setDoc(doc(db, "admins", uid.trim()), {
+    email, nome, profissionalId, papel: "profissional", criadoEm: serverTimestamp()
+  }, { merge: true });
+}
+
+export const removerAcesso = (uid) => deleteDoc(doc(db, "admins", uid));
 
 export async function ehAdmin(uid){
   if(!uid) return false;

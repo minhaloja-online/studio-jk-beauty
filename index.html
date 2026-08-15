@@ -55,7 +55,9 @@
     </a>
     <nav class="menu">
       <a href="#sobre">Sobre</a>
-      <a href="#servicos">Serviços</a>
+      <a href="#equipe">Equipe</a>
+      <a href="#equipe">Equipe</a>
+  <a href="#servicos">Serviços</a>
       <a href="#galeria">Galeria</a>
       <a href="#depoimentos">Depoimentos</a>
       <a href="#local">Onde ficamos</a>
@@ -77,6 +79,7 @@
 <nav class="cartela" id="cartela" aria-label="Navegação por seções">
   <button data-ir="inicio" style="--tom:#9E5F63"><span class="pt"></span><span class="tx">Início</span></button>
   <button data-ir="sobre" style="--tom:#C8A86B"><span class="pt"></span><span class="tx">Sobre</span></button>
+  <button data-ir="equipe" style="--tom:#C09A8E"><span class="pt"></span><span class="tx">Equipe</span></button>
   <button data-ir="servicos" style="--tom:#B5897A"><span class="pt"></span><span class="tx">Serviços</span></button>
   <button data-ir="diferenciais" style="--tom:#2A1D22"><span class="pt"></span><span class="tx">Diferenciais</span></button>
   <button data-ir="galeria" style="--tom:#D8B3A8"><span class="pt"></span><span class="tx">Galeria</span></button>
@@ -163,6 +166,18 @@
         <li><span class="num">03</span><div><b data-txt="sobre.pontos.2.titulo">Acabamento que dura</b><small data-txt="sobre.pontos.2.texto">Preparo correto da unha e produtos profissionais para o esmalte durar semanas.</small></div></li>
       </ul>
     </div>
+  </div>
+</section>
+
+<!-- ============ EQUIPE ============ -->
+<section class="secao clara" id="equipe">
+  <div class="env centro">
+    <div class="rev">
+      <div class="rotulo" data-txt="equipe.rotulo"></div>
+      <h2 data-txt="equipe.titulo"></h2>
+      <p class="sub" data-txt="equipe.texto"></p>
+    </div>
+    <div class="equipe" id="equipe-lista"></div>
   </div>
 </section>
 
@@ -317,6 +332,7 @@
       <ul>
         <li><a class="link-linha" href="#inicio">Início</a></li>
         <li><a class="link-linha" href="#sobre">Sobre</a></li>
+        <li><a class="link-linha" href="#equipe">Equipe</a></li>
         <li><a class="link-linha" href="#servicos">Serviços</a></li>
         <li><a class="link-linha" href="#galeria">Galeria</a></li>
         <li><a class="link-linha" href="#depoimentos">Depoimentos</a></li>
@@ -351,6 +367,16 @@
   <button class="nav ant" id="lupa-ant" aria-label="Foto anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5l-7 7 7 7"/></svg></button>
   <div class="quadro" id="lupa-quadro"></div>
   <button class="nav prox" id="lupa-prox" aria-label="Próxima foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5l7 7-7 7"/></svg></button>
+</div>
+
+<!-- Escolha de profissional no agendamento -->
+<div id="escolher" role="dialog" aria-modal="true" aria-labelledby="escolher-tit">
+  <div class="caixa">
+    <h3 id="escolher-tit">Com quem você quer agendar?</h3>
+    <p class="dica">Cada profissional tem sua própria agenda.</p>
+    <div id="escolher-lista"></div>
+    <button class="cancelar" id="fechar-escolher">Cancelar</button>
+  </div>
 </div>
 
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-tit">

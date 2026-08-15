@@ -45,12 +45,43 @@ export const PADRAO = {
     titulo: "Escolha o seu cuidado",
     nota: "Valores conversados no WhatsApp, de acordo com o tamanho e o estado da unha. Sem surpresa na hora de pagar.",
     itens: [
-      { nome: "Manicure",      texto: "Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.", preco: "Sob consulta", foto: "", visivel: true },
-      { nome: "Pedicure",      texto: "Pés cuidados de verdade, com esfoliação e aquele alívio no fim do dia.", preco: "Sob consulta", foto: "", visivel: true },
-      { nome: "Unhas em gel",  texto: "Alongamento e blindagem para unhas resistentes, com brilho que não cai.", preco: "Sob consulta", foto: "", visivel: true },
-      { nome: "Nail Art",      texto: "Desenho feito à mão, francesinha, pedraria — traga a referência que a gente faz.", preco: "Sob consulta", foto: "", visivel: true }
+      { nome: "Manicure",      texto: "Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true },
+      { nome: "Pedicure",      texto: "Pés cuidados de verdade, com esfoliação e aquele alívio no fim do dia.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true },
+      { nome: "Unhas em gel",  texto: "Alongamento e blindagem para unhas resistentes, com brilho que não cai.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true },
+      { nome: "Nail Art",      texto: "Desenho feito à mão, francesinha, pedraria — traga a referência que a gente faz.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true }
     ]
   },
+
+  equipe: {
+    rotulo: "Quem cuida de você",
+    titulo: "As mãos do studio",
+    texto: "Cada uma tem sua agenda e seu WhatsApp. Escolha com quem prefere marcar."
+  },
+
+  /* Uma entrada por profissional. O id nunca muda depois de criado:
+     é ele que liga o serviço e o acesso ao painel à pessoa certa. */
+  profissionais: [
+    {
+      id: "p1",
+      nome: "Karine",
+      funcao: "Nail designer",
+      bio: "Cuida das unhas com calma e capricho no acabamento.",
+      foto: "",
+      whatsapp: "5593991797198",
+      instagram: "https://www.instagram.com/karine_portela18/",
+      visivel: true
+    },
+    {
+      id: "p2",
+      nome: "Segunda profissional",
+      funcao: "Nail designer",
+      bio: "",
+      foto: "",
+      whatsapp: "",
+      instagram: "",
+      visivel: false
+    }
+  ],
 
   diferenciais: {
     rotulo: "Por dentro",
@@ -123,7 +154,14 @@ export const PADRAO = {
 
 /* Modelo de um serviço novo criado pelo painel */
 export const SERVICO_NOVO = () =>
-  ({ nome: "Novo serviço", texto: "", preco: "Sob consulta", foto: "", visivel: true });
+  ({ nome: "Novo serviço", texto: "", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true });
+
+/* Modelo de profissional nova. O id é sorteado e fica para sempre:
+   é ele que liga serviços e acesso ao painel à pessoa certa. */
+export const PROFISSIONAL_NOVA = () =>
+  ({ id: "p" + Math.random().toString(36).slice(2, 8),
+     nome: "Nova profissional", funcao: "Nail designer", bio: "",
+     foto: "", whatsapp: "", instagram: "", visivel: true });
 
 /* Ajusta configurações salvas antes da mudança em que os serviços
    passaram a ser uma lista livre com foto própria. Roda toda vez:
@@ -131,6 +169,8 @@ export const SERVICO_NOVO = () =>
 export function migrar(cfg){
   cfg.servicos = cfg.servicos || {};
   cfg.imagens  = cfg.imagens  || {};
+
+  /* fotos de serviço que antigamente moravam em imagens.s1..s4 */
   const antigas = ["s1", "s2", "s3", "s4"];
   cfg.servicos.itens = (cfg.servicos.itens || []).map((item, i) => {
     const pronto = { ...SERVICO_NOVO(), ...item };
@@ -138,6 +178,19 @@ export function migrar(cfg){
     return pronto;
   });
   antigas.forEach(k => delete cfg.imagens[k]);
+
+  /* studio de uma profissional só passando a ter equipe */
+  if(!Array.isArray(cfg.profissionais) || !cfg.profissionais.length){
+    const primeira = { ...PADRAO.profissionais[0] };
+    primeira.nome      = cfg.sobre?.profissional || primeira.nome;
+    primeira.funcao    = cfg.sobre?.cargo        || primeira.funcao;
+    primeira.foto      = cfg.imagens?.sobre      || "";
+    primeira.whatsapp  = cfg.contato?.whatsapp   || primeira.whatsapp;
+    primeira.instagram = cfg.contato?.instagram  || primeira.instagram;
+    cfg.profissionais = [primeira, { ...PADRAO.profissionais[1] }];
+  }
+  cfg.profissionais = cfg.profissionais.map(p => ({ ...PADRAO.profissionais[1], ...p }));
+
   return cfg;
 }
 

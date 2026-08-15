@@ -97,6 +97,21 @@ input,textarea,select{ font:inherit; }
 .foto input[type=file]{ display:none; }
 .progresso{ font-size:.72rem; color:var(--rosa); }
 
+/* ---------- PROFISSIONAIS ---------- */
+.prof-adm{ display:grid; grid-template-columns:190px 1fr; gap:16px; align-items:start;
+  border:1px solid var(--borda); border-radius:14px; padding:14px; margin-bottom:14px; background:var(--branco); }
+.prof-adm.escondido{ opacity:.55; }
+.prof-adm .foto{ margin:0; }
+.prof-adm .cabeca{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+.prof-adm .ver{ display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--suave); }
+.acesso{ border-top:1px solid var(--borda); margin-top:14px; padding-top:14px; }
+.acesso .estado{ display:flex; align-items:center; gap:8px; font-size:.82rem; margin-bottom:10px; }
+.acesso .bolinha{ width:8px; height:8px; border-radius:50%; background:#C9C2BD; flex:none; }
+.acesso .bolinha.on{ background:#2E7D5B; }
+.acesso .form-acesso{ display:none; }
+.acesso .form-acesso.aberto{ display:block; }
+@media(max-width:700px){ .prof-adm{ grid-template-columns:1fr; } }
+
 /* ---------- FINANCEIRO ---------- */
 .mes-barra{ display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
 .mes-barra label{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--suave); }
@@ -231,6 +246,7 @@ input,textarea,select{ font:inherit; }
     <button class="aba on" data-aba="avaliacoes">Avaliações <span class="selo esconde" id="conta-pendentes">0</span></button>
     <button class="aba" data-aba="textos">Textos</button>
     <button class="aba" data-aba="servicos">Serviços</button>
+    <button class="aba" data-aba="equipe">Profissionais</button>
     <button class="aba" data-aba="caixa">Financeiro</button>
     <button class="aba" data-aba="fotos">Fotos</button>
     <button class="aba" data-aba="aparencia">Aparência</button>
@@ -260,6 +276,24 @@ input,textarea,select{ font:inherit; }
       <div id="campos-textos"></div>
     </div>
 
+    <!-- PROFISSIONAIS -->
+    <div class="pg esconde" id="pg-equipe">
+      <h1 class="titulo-pg">Profissionais</h1>
+      <p class="legenda">Quem trabalha no studio. Cada uma aparece no site com seu próprio WhatsApp e pode ter acesso ao painel.</p>
+
+      <div class="bloco">
+        <h3>Texto da seção no site</h3>
+        <div id="campos-equipe-topo"></div>
+      </div>
+
+      <div class="bloco">
+        <h3>Equipe</h3>
+        <p class="desc">Desmarque “Mostrar no site” para esconder alguém sem apagar o cadastro.</p>
+        <div id="lista-profissionais"></div>
+        <button class="btn" id="add-profissional" style="margin-top:14px">+ Adicionar profissional</button>
+      </div>
+    </div>
+
     <!-- FINANCEIRO -->
     <div class="pg esconde" id="pg-caixa">
       <h1 class="titulo-pg">Financeiro</h1>
@@ -269,6 +303,7 @@ input,textarea,select{ font:inherit; }
         <label for="mes">Mês</label>
         <input type="month" id="mes">
         <button class="btn mini" id="mes-hoje">Mês atual</button>
+        <span id="filtro-quem"></span>
       </div>
 
       <div class="painel-num" id="numeros"></div>
@@ -422,7 +457,7 @@ input,textarea,select{ font:inherit; }
 <div id="recado"></div>
 
 <script type="module">
-import { PADRAO, mesclar, migrar, SERVICO_NOVO, FONTES_TITULO, FONTES_TEXTO, urlDasFontes } from "./assets/padrao.js";
+import { PADRAO, mesclar, migrar, SERVICO_NOVO, PROFISSIONAL_NOVA, FONTES_TITULO, FONTES_TEXTO, urlDasFontes } from "./assets/padrao.js";
 
 const $  = (s, e = document) => e.querySelector(s);
 const $$ = (s, e = document) => [...e.querySelectorAll(s)];
@@ -540,10 +575,36 @@ $("#sair").addEventListener("click", async () => {
 /* ============================================================
    ABERTURA DO PAINEL
    ============================================================ */
+let PERFIL = null;      // dados da conta logada
+let SOU_DONA = true;    // dona = acesso total; profissional = só o dela
+let MEU_PID = "";       // id da profissional ligada a esta conta
+
+/** Esconde as abas que não pertencem a quem entrou. */
+function ajustarPermissoes(){
+  const soDona = ["textos", "fotos", "aparencia", "contato", "avaliacoes", "equipe"];
+  $$(".aba").forEach(b => {
+    const dela = !soDona.includes(b.dataset.aba);
+    b.classList.toggle("esconde", !SOU_DONA && !dela);
+  });
+  if(!SOU_DONA){
+    const tit = $("#pg-servicos .titulo-pg");
+    if(tit) tit.textContent = "Meus serviços";
+    const legenda = $("#pg-servicos .legenda");
+    if(legenda) legenda.textContent = "Os serviços que você atende. Eles aparecem no site com o seu nome e o seu WhatsApp.";
+    const ativa = $(".aba:not(.esconde)");
+    if(ativa && $(".aba.ativa")?.classList.contains("esconde")) ativa.click();
+  }
+}
+
 async function abrirPainel(user){
   $("#entrada").classList.add("esconde");
   $("#painel").classList.remove("esconde");
   $("#meu-email").textContent = user.email || "";
+
+  try{ PERFIL = await FB.meuPerfil(user.uid); }catch(e){ PERFIL = null; }
+  SOU_DONA = !PERFIL || PERFIL.papel !== "profissional";
+  MEU_PID  = PERFIL?.profissionalId || "";
+  ajustarPermissoes();
 
   let salvo = null;
   try { salvo = await FB.lerConfig(); }
@@ -554,6 +615,8 @@ async function abrirPainel(user){
   montarContato();
   montarAparencia();
   await montarFotos();
+  await recarregarAcessos();
+  montarProfissionais();
   montarServicos();
   $("#mes").value = mesAtual();
   $("#r-data").value = $("#d-data").value = hojeISO();
@@ -848,13 +911,14 @@ function montarServicos(){
 
   const lista = $("#lista-servicos");
   const itens = CFG.servicos.itens;
+  $("#campos-servicos-topo").classList.toggle("esconde", !SOU_DONA);
 
   if(!itens.length){
     lista.innerHTML = `<p class="desc">Nenhum serviço cadastrado. Use o botão abaixo para criar o primeiro.</p>`;
     return;
   }
 
-  lista.innerHTML = itens.map((it, i) => `
+  lista.innerHTML = itens.map((it, i) => (!SOU_DONA && it.profissionalId !== MEU_PID) ? "" : `
     <div class="serv-adm ${it.visivel === false ? "escondido" : ""}" data-i="${i}">
       ${cartaoFoto(`servicos.itens.${i}.foto`, "Foto do serviço", it.foto)}
       <div class="dados">
@@ -871,6 +935,14 @@ function montarServicos(){
           ${campo(`servicos.itens.${i}.nome`, "Nome do serviço")}
           ${campo(`servicos.itens.${i}.preco`, "Preço")}
         </div>
+        <div class="campo">
+          <label>Quem faz</label>
+          <select class="dono-servico">
+            <option value="">Qualquer uma das profissionais</option>
+            ${CFG.profissionais.map(p =>
+              `<option value="${p.id}" ${it.profissionalId === p.id ? "selected" : ""}>${escaparTxt(p.nome)}</option>`).join("")}
+          </select>
+        </div>
         ${campo(`servicos.itens.${i}.texto`, "Descrição", "area")}
       </div>
     </div>`).join("");
@@ -881,6 +953,11 @@ function montarServicos(){
 
   $$(".serv-adm", lista).forEach(cartao => {
     const i = +cartao.dataset.i;
+
+    $(".dono-servico", cartao).addEventListener("change", e => {
+      CFG.servicos.itens[i].profissionalId = e.target.value;
+      marcarSujo();
+    });
 
     $(".ver-servico", cartao).addEventListener("change", e => {
       CFG.servicos.itens[i].visivel = e.target.checked;
@@ -910,7 +987,9 @@ function montarServicos(){
 }
 
 $("#add-servico").addEventListener("click", () => {
-  CFG.servicos.itens.push(SERVICO_NOVO());
+  const novo = SERVICO_NOVO();
+  if(!SOU_DONA) novo.profissionalId = MEU_PID;
+  CFG.servicos.itens.push(novo);
   marcarSujo();
   montarServicos();
   const ultimo = $("#lista-servicos").lastElementChild;
@@ -1048,6 +1127,169 @@ async function carregarAvaliacoes(){
 }
 
 /* ============================================================
+   ABA PROFISSIONAIS
+   Cadastro da equipe e criação do acesso de cada uma ao painel.
+   ============================================================ */
+let ACESSOS = [];   // contas do painel, para saber quem já tem login
+
+async function recarregarAcessos(){
+  if(!SOU_DONA) return;
+  try{ ACESSOS = await FB.listarAcessos(); }
+  catch(e){ ACESSOS = []; console.warn(e); }
+}
+
+const acessoDe = (profId) => ACESSOS.find(a => a.profissionalId === profId);
+
+function montarProfissionais(){
+  const topo = $("#campos-equipe-topo");
+  topo.innerHTML = `<div class="dupla">${campo("equipe.rotulo", "Etiqueta")}${campo("equipe.titulo", "Título")}</div>
+    ${campo("equipe.texto", "Frase de apoio", "area")}`;
+  ligarCampos(topo);
+
+  const lista = $("#lista-profissionais");
+  const time = CFG.profissionais;
+
+  lista.innerHTML = time.map((p, i) => {
+    const acesso = acessoDe(p.id);
+    return `
+    <div class="prof-adm ${p.visivel === false ? "escondido" : ""}" data-i="${i}" data-pid="${p.id}">
+      ${cartaoFoto(`profissionais.${i}.foto`, "Foto da profissional", p.foto)}
+      <div class="dados">
+        <div class="cabeca">
+          <label class="ver"><input type="checkbox" class="ver-prof" ${p.visivel === false ? "" : "checked"}> Mostrar no site</label>
+          <button class="btn mini perigo excluir-prof" ${time.length <= 1 ? "disabled" : ""}>Excluir</button>
+        </div>
+        <div class="dupla">
+          ${campo(`profissionais.${i}.nome`, "Nome")}
+          ${campo(`profissionais.${i}.funcao`, "Função")}
+        </div>
+        ${campo(`profissionais.${i}.bio`, "Frase de apresentação", "area")}
+        <div class="dupla">
+          ${campo(`profissionais.${i}.whatsapp`, "WhatsApp (só números, com 55)")}
+          ${campo(`profissionais.${i}.instagram`, "Endereço do Instagram")}
+        </div>
+
+        <div class="acesso">
+          <div class="estado">
+            <span class="bolinha ${acesso ? "on" : ""}"></span>
+            ${acesso
+              ? `Acesso ao painel: <b>${escaparTxt(acesso.email || "")}</b>`
+              : "Sem acesso ao painel"}
+            ${acesso && acesso.papel === "profissional"
+              ? `<button class="btn mini perigo tirar-acesso" data-uid="${acesso.uid}" style="margin-left:auto">Remover acesso</button>` : ""}
+          </div>
+          ${acesso ? "" : `
+            <button class="btn mini abrir-acesso">Criar acesso para ela</button>
+            <div class="form-acesso">
+              <p class="desc" style="margin-top:12px">Ela vai entrar no mesmo endereço do painel, com este e-mail e senha. Poderá lançar o próprio financeiro e cuidar dos serviços dela.</p>
+              <div class="dupla">
+                <div class="campo"><label>E-mail</label><input type="email" class="ac-email" placeholder="email@exemplo.com"></div>
+                <div class="campo"><label>Senha (mín. 6)</label><input type="password" class="ac-senha" placeholder="senha inicial"></div>
+              </div>
+              <p class="aviso-linha ac-erro"></p>
+              <button class="btn mini criar-acesso">Criar acesso</button>
+              <details style="margin-top:12px">
+                <summary class="desc" style="cursor:pointer">Já criei a conta no Console do Firebase</summary>
+                <div class="campo" style="margin-top:10px"><label>UID da conta</label><input type="text" class="ac-uid" placeholder="cole o UID"></div>
+                <button class="btn mini vincular-acesso">Vincular</button>
+              </details>
+            </div>`}
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  ligarCampos(lista);
+  $$(".foto", lista).forEach(ligarFoto);
+
+  $$(".prof-adm", lista).forEach(cartao => {
+    const i = +cartao.dataset.i;
+    const pid = cartao.dataset.pid;
+
+    $(".ver-prof", cartao).addEventListener("change", e => {
+      CFG.profissionais[i].visivel = e.target.checked;
+      cartao.classList.toggle("escondido", !e.target.checked);
+      marcarSujo();
+    });
+
+    $(".excluir-prof", cartao).addEventListener("click", () => {
+      const p = CFG.profissionais[i];
+      if(acessoDe(p.id)) return alert("Remova o acesso ao painel antes de excluir esta profissional.");
+      if(!confirm(`Excluir ${p.nome || "esta profissional"}? Os serviços dela ficam sem dono.`)) return;
+      if(p.foto?.startsWith("midia:")) FB.apagarMidia(p.foto);
+      CFG.servicos.itens.forEach(s => { if(s.profissionalId === p.id) s.profissionalId = ""; });
+      CFG.profissionais.splice(i, 1);
+      marcarSujo();
+      montarProfissionais();
+      montarServicos();
+    });
+
+    $(".abrir-acesso", cartao)?.addEventListener("click", () => {
+      $(".form-acesso", cartao).classList.toggle("aberto");
+    });
+
+    $(".criar-acesso", cartao)?.addEventListener("click", async () => {
+      const email = $(".ac-email", cartao).value.trim();
+      const senha = $(".ac-senha", cartao).value;
+      const erro  = $(".ac-erro", cartao);
+      if(!email) return erro.textContent = "Digite o e-mail dela.";
+      if(senha.length < 6) return erro.textContent = "A senha precisa de pelo menos 6 caracteres.";
+      erro.textContent = "";
+
+      const bt = $(".criar-acesso", cartao);
+      bt.disabled = true; bt.textContent = "Criando…";
+      try{
+        await FB.criarAcessoProfissional({
+          email, senha,
+          nome: CFG.profissionais[i].nome,
+          profissionalId: pid
+        });
+        await recarregarAcessos();
+        montarProfissionais();
+        recado("Acesso criado. Passe o e-mail e a senha para ela.");
+      }catch(e){
+        erro.textContent = FB.explicarErro(e);
+        console.error(e);
+      }finally{
+        bt.disabled = false; bt.textContent = "Criar acesso";
+      }
+    });
+
+    $(".vincular-acesso", cartao)?.addEventListener("click", async () => {
+      const uid = $(".ac-uid", cartao).value.trim();
+      const erro = $(".ac-erro", cartao);
+      if(uid.length < 10) return erro.textContent = "Cole o UID que aparece no Console.";
+      try{
+        await FB.vincularAcesso({
+          uid, email: $(".ac-email", cartao).value.trim(),
+          nome: CFG.profissionais[i].nome, profissionalId: pid
+        });
+        await recarregarAcessos();
+        montarProfissionais();
+        recado("Conta vinculada.");
+      }catch(e){ erro.textContent = FB.explicarErro(e); }
+    });
+
+    $(".tirar-acesso", cartao)?.addEventListener("click", async (e) => {
+      if(!confirm("Remover o acesso desta profissional ao painel?")) return;
+      try{
+        await FB.removerAcesso(e.target.dataset.uid);
+        await recarregarAcessos();
+        montarProfissionais();
+        recado("Acesso removido. A conta continua existindo no Firebase — apague por lá se quiser.");
+      }catch(err){ recado(FB.explicarErro(err), true); }
+    });
+  });
+}
+
+$("#add-profissional").addEventListener("click", () => {
+  CFG.profissionais.push(PROFISSIONAL_NOVA());
+  marcarSujo();
+  montarProfissionais();
+  $("#lista-profissionais").lastElementChild?.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+/* ============================================================
    ABA FINANCEIRO
    Guarda entradas e custos em lancamentos/{id} e calcula
    faturamento, lucro e o dízimo do mês escolhido.
@@ -1069,19 +1311,54 @@ const mesAtras = (mes, n) => {
 
 let lancamentos = [];        // últimos 6 meses, já carregados
 let baseDizimo = "faturamento";
+let verDeQuem = "eu";        // "eu" ou o uid de uma profissional, ou "todas" (só a dona)
+
+/** Quem tem caixa: as contas ligadas a uma profissional, mais a própria dona. */
+function contasComCaixa(){
+  const mapa = new Map();
+  mapa.set(FB.auth.currentUser.uid, PERFIL?.nome || $("#meu-email").textContent || "Eu");
+  ACESSOS.forEach(a => {
+    const prof = CFG.profissionais.find(p => p.id === a.profissionalId);
+    mapa.set(a.uid, prof?.nome || a.nome || a.email || "Profissional");
+  });
+  return [...mapa].map(([uid, nome]) => ({ uid, nome }));
+}
+
+function montarFiltroQuem(){
+  const alvo = $("#filtro-quem");
+  if(!SOU_DONA || contasComCaixa().length < 2){ alvo.innerHTML = ""; return; }
+  alvo.innerHTML = `
+    <label style="font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--suave);margin-left:8px">Ver</label>
+    <select id="quem-caixa" style="padding:8px 10px;border:1px solid var(--borda);border-radius:9px;background:var(--branco);font:inherit">
+      <option value="eu">Só o meu</option>
+      <option value="todas">O studio inteiro</option>
+      ${contasComCaixa().filter(c => c.uid !== FB.auth.currentUser.uid)
+        .map(c => `<option value="${c.uid}">${escaparTxt(c.nome)}</option>`).join("")}
+    </select>`;
+  $("#quem-caixa").value = verDeQuem;
+  $("#quem-caixa").addEventListener("change", e => { verDeQuem = e.target.value; carregarCaixa(); });
+}
 
 async function carregarCaixa(){
   const mes = $("#mes").value || mesAtual();
   const inicio = mesAtras(mes, 5) + "-01";
   const fim = ultimoDia(mes);
 
+  const eu = FB.auth.currentUser.uid;
+  const alvos = !SOU_DONA || verDeQuem === "eu" ? [eu]
+              : verDeQuem === "todas" ? contasComCaixa().map(c => c.uid)
+              : [verDeQuem];
+
   try{
-    lancamentos = await FB.lancamentosEntre(inicio, fim);
+    const partes = await Promise.all(alvos.map(uid =>
+      FB.lancamentosEntre(uid, inicio, fim).catch(() => [])));
+    lancamentos = partes.flat();
   }catch(e){
     lancamentos = [];
     recado(FB.explicarErro(e), true);
     console.error(e);
   }
+  montarFiltroQuem();
   desenharCaixa();
 }
 
@@ -1160,14 +1437,15 @@ function desenharCaixa(){
     .sort((a, b) => b.data.localeCompare(a.data))
     .map(l => {
       const entrada = l.tipo === "receita";
-      return `<div class="lanc" data-id="${l.id}">
+      return `<div class="lanc" data-id="${l.id}" data-uid="${l.uid}">
         <span class="dia">${l.data.slice(8)}/${l.data.slice(5,7)}</span>
         <span class="txt">
           <b>${escaparTxt(l.descricao || l.categoria || (entrada ? "Atendimento" : "Custo"))}</b>
-          <small>${escaparTxt(entrada ? (l.categoria || "Atendimento") : (l.categoria || "Custo"))}</small>
+          <small>${escaparTxt(l.categoria || (entrada ? "Atendimento" : "Custo"))}${
+            verDeQuem === "todas" ? " · " + escaparTxt(contasComCaixa().find(c => c.uid === l.uid)?.nome || "") : ""}</small>
         </span>
         <span class="val ${entrada ? "ent" : "sai"}">${entrada ? "+" : "−"} ${dinheiro.format(l.valor)}</span>
-        <button class="btn mini perigo apagar-lanc">Excluir</button>
+        ${(l.uid === FB.auth.currentUser.uid || SOU_DONA) ? `<button class="btn mini perigo apagar-lanc">Excluir</button>` : ""}
       </div>`;
     }).join("");
 
@@ -1176,7 +1454,7 @@ function desenharCaixa(){
     if(!confirm("Excluir este lançamento?")) return;
     bt.disabled = true;
     try{
-      await FB.excluirLancamento(linha.dataset.id);
+      await FB.excluirLancamento(linha.dataset.uid, linha.dataset.id);
       lancamentos = lancamentos.filter(l => l.id !== linha.dataset.id);
       desenharCaixa();
       recado("Lançamento excluído.");
@@ -1192,6 +1470,7 @@ function atualizarSeletorServicos(){
   const sel = $("#r-servico");
   const escolhido = sel.value;
   sel.innerHTML = CFG.servicos.itens
+    .filter(i => SOU_DONA || !i.profissionalId || i.profissionalId === MEU_PID)
     .map(i => `<option>${escaparTxt(i.nome)}</option>`).join("") + `<option>Outro</option>`;
   if(escolhido) sel.value = escolhido;
 }
@@ -1211,7 +1490,7 @@ async function lancar(tipo){
   const bt = $(tipo === "receita" ? "#add-receita" : "#add-despesa");
   bt.disabled = true; bt.textContent = "Lançando…";
   try{
-    await FB.salvarLancamento({
+    await FB.salvarLancamento(FB.auth.currentUser.uid, {
       tipo, data, valor,
       descricao,
       categoria: tipo === "receita" ? $("#r-servico").value : $("#d-cat").value
@@ -1255,7 +1534,8 @@ $("#descartar").addEventListener("click", async () => {
   if(sujo && !confirm("Descartar as alterações que você fez desde o último salvamento?")) return;
   const salvo = await FB.lerConfig();
   CFG = migrar(mesclar(PADRAO, salvo || {}));
-  montarTextos(); montarContato(); montarAparencia(); await montarFotos(); montarServicos();
+  montarTextos(); montarContato(); montarAparencia(); await montarFotos();
+  montarProfissionais(); montarServicos();
   marcarSujo(false);
   recado("Alterações descartadas.");
 });

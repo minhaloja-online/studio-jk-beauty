@@ -83,7 +83,16 @@ function aplicarContato(c){
     el.setAttribute("target", "_blank");
     el.setAttribute("rel", "noopener");
   };
-  $$("[data-zap]").forEach(el => abrir(el, zap()));
+  const time = equipeVisivel();
+  $$("[data-zap]").forEach(el => {
+    if(time.length > 1){
+      el.setAttribute("href", "#");
+      el.removeAttribute("target");
+      el.dataset.escolher = "";
+    }else{
+      abrir(el, time.length ? zapDe(time[0]) : zap());
+    }
+  });
   $$("[data-insta]").forEach(el => abrir(el, c.instagram));
   $$("[data-mapa]").forEach(el => abrir(el, c.mapsLink));
   $("#frame-mapa").src = "https://www.google.com/maps?q=" + encodeURIComponent(c.mapsBusca) + "&output=embed";
@@ -112,6 +121,7 @@ async function aplicarFotos(cfg){
   fotosGaleria = cfg.galeriaFotos.map(resolver);
   montarGaleria();
   montarServicos(resolver);
+  montarEquipe(resolver);
 }
 
 /* ------------------------------------------------------------
@@ -129,6 +139,67 @@ const svgEstrela = (cheia) =>
   `<svg viewBox="0 0 24 24" fill="${cheia ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.3"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></svg>`;
 const linhaEstrelas = (nota) => [1,2,3,4,5].map(i => svgEstrela(i <= Math.round(nota))).join("");
 
+/** Profissionais que aparecem para a cliente. */
+function equipeVisivel(){
+  return (CFG.profissionais || []).filter(p => p.visivel !== false && (p.nome || "").trim());
+}
+
+/** Link de WhatsApp de uma profissional (ou o do studio, se ela não tiver). */
+function zapDe(prof, servico){
+  const numero = (prof?.whatsapp || "").replace(/\D/g, "") || CFG.contato.whatsapp;
+  const texto = servico
+    ? `Olá${prof?.nome ? `, ${prof.nome}` : ""}! Vim pelo site e gostaria de agendar: ${servico}.`
+    : (prof?.nome ? `Olá, ${prof.nome}! Vim pelo site e gostaria de agendar um horário.` : CFG.contato.mensagem);
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
+const acharProf = (id) => (CFG.profissionais || []).find(p => p.id === id);
+
+function montarEquipe(resolver = (r) => (r?.startsWith("midia:") ? "" : r || "")){
+  const alvo = $("#equipe-lista");
+  if(!alvo) return;
+  const time = equipeVisivel();
+  const secao = $("#equipe");
+
+  // uma profissional só: a seção não faz sentido
+  if(time.length < 2){ if(secao) secao.style.display = time.length ? "" : "none"; }
+  alvo.innerHTML = time.map((p, i) => {
+    const url = resolver(p.foto);
+    return `
+    <article class="prof rev" data-atraso="${i % 4}">
+      <div class="arco grao ${url ? "tem-foto" : ""}">
+        <div class="foto" style="${url ? `background-image:url('${url.replace(/'/g, "%27")}')` : ""}"></div>
+        <div class="marca"><b>${escapar((p.nome || "JK").slice(0, 2).toUpperCase())}</b><small>Foto</small></div>
+      </div>
+      <h3>${escapar(p.nome)}</h3>
+      <span class="funcao">${escapar(p.funcao || "")}</span>
+      ${p.bio ? `<p class="bio">${escapar(p.bio)}</p>` : ""}
+      <div class="contatos">
+        <a class="btn" href="${zapDe(p)}" target="_blank" rel="noopener"><span>Agendar</span></a>
+        ${p.instagram ? `<a class="so-insta" href="${p.instagram}" target="_blank" rel="noopener" aria-label="Instagram de ${escapar(p.nome)}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>` : ""}
+      </div>
+    </article>`;
+  }).join("");
+  $$("#equipe-lista .rev").forEach(el => olho.observe(el));
+}
+
+/* ---- escolha de profissional no agendamento ---- */
+function abrirEscolha(servico){
+  const time = equipeVisivel();
+  $("#escolher-lista").innerHTML = time.map(p => `
+    <a class="op" href="${zapDe(p, servico)}" target="_blank" rel="noopener">
+      <span class="av" style="${p._foto ? `background-image:url('${p._foto}')` : ""}">${p._foto ? "" : escapar((p.nome || "?")[0])}</span>
+      <span><b>${escapar(p.nome)}</b><small>${escapar(p.funcao || "")}</small></span>
+    </a>`).join("");
+  $("#escolher").classList.add("aberto");
+  document.body.classList.add("travado");
+}
+function fecharEscolha(){
+  $("#escolher").classList.remove("aberto");
+  document.body.classList.remove("travado");
+}
+
 function montarServicos(resolver = (r) => (r?.startsWith("midia:") ? "" : r || "")){
   const alvo = $("#grade-serv");
   if(!alvo) return;
@@ -139,22 +210,25 @@ function montarServicos(resolver = (r) => (r?.startsWith("midia:") ? "" : r || "
     return;
   }
 
-  const c = CFG.contato;
+  const varias = equipeVisivel().length > 1;
   alvo.innerHTML = itens.map((s, i) => {
     const url = resolver(s.foto);
-    const zap = `https://wa.me/${c.whatsapp}?text=` +
-      encodeURIComponent(`Olá! Vim pelo site e gostaria de agendar: ${s.nome}.`);
+    const dona = acharProf(s.profissionalId);
+    const mostraDona = varias && dona && dona.visivel !== false;
     return `
     <article class="serv rev" data-atraso="${i % 4}">
       <div class="arco grao ${url ? "tem-foto" : ""}">
         <div class="foto" style="${url ? `background-image:url('${url.replace(/'/g, "%27")}')` : ""}"></div>
         <div class="marca"><b>JK</b><small>Foto</small></div>
       </div>
+      ${mostraDona ? `<span class="quem-faz">com ${escapar(dona.nome)}</span>` : ""}
       <h3>${escapar(s.nome)}</h3>
       <p>${escapar(s.texto || "")}</p>
       <div class="rodape">
         <span class="preco">${escapar(s.preco || "")}</span>
-        <a class="marcar" href="${zap}" target="_blank" rel="noopener">Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="marcar" ${mostraDona || !varias
+          ? `href="${zapDe(dona, s.nome)}" target="_blank" rel="noopener"`
+          : `href="#" data-escolher="${escapar(s.nome)}"`}>Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
     </article>`;
   }).join("");
@@ -386,6 +460,17 @@ $("#enviar-av").onclick = async () => {
 };
 
 /* teclado */
+  document.addEventListener("click", e => {
+    const gatilho = e.target.closest("[data-escolher]");
+    if(!gatilho) return;
+    e.preventDefault();
+    abrirEscolha(gatilho.dataset.escolher || "");
+  });
+
+  $("#fechar-escolher").addEventListener("click", fecharEscolha);
+  $("#escolher").addEventListener("click", e => { if(e.target.id === "escolher") fecharEscolha(); });
+  $("#escolher-lista").addEventListener("click", e => { if(e.target.closest(".op")) fecharEscolha(); });
+
 addEventListener("keydown", e => {
   if(e.key === "Escape"){
     if(lupa.classList.contains("aberto")) fechaLupa();
@@ -418,6 +503,7 @@ montarLetreiro(CFG.letreiro);
 fotosGaleria = CFG.galeriaFotos.slice();
 montarGaleria();
 montarServicos();
+montarEquipe();
 
 // e então busca o conteúdo real
 (async () => {
