@@ -6,12 +6,12 @@
    são as regras do Firestore (arquivo firestore.rules).
    ============================================================ */
 export const CHAVES_FIREBASE = {
-  apiKey:            "COLE_AQUI",
+  apiKey:            "AIzaSyDYnXHgZl--7Wt79xFXPJwh3VRFc9uSuZM",
   authDomain:        "studio-jk-beauty.firebaseapp.com",
   projectId:         "studio-jk-beauty",
   storageBucket:     "studio-jk-beauty.firebasestorage.app",
-  messagingSenderId: "COLE_AQUI",
-  appId:             "COLE_AQUI"
+  messagingSenderId: "489243570074",
+  appId:             "1:489243570074:web:11728704a28032ece49423"
 };
 
 /* Versão do SDK do Firebase. Se um dia precisar atualizar,
