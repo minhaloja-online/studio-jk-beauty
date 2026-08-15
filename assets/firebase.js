@@ -200,9 +200,16 @@ export async function criarAcessoProfissional({ email, senha, nome, profissional
   const auth2 = getAuth(app2);
   try{
     const cred = await createUserWithEmailAndPassword(auth2, email, senha);
-    await setDoc(doc(db, "admins", cred.user.uid), {
-      email, nome, profissionalId, papel: "profissional", criadoEm: serverTimestamp()
-    });
+    try{
+      await setDoc(doc(db, "admins", cred.user.uid), {
+        email, nome, profissionalId, papel: "profissional", criadoEm: serverTimestamp()
+      });
+    }catch(e){
+      // a conta de login já existe, mas não foi ligada ao painel.
+      // Devolve o UID para dar para vincular sem criar tudo de novo.
+      e.uidCriado = cred.user.uid;
+      throw e;
+    }
     await sair2(auth2);
     return cred.user.uid;
   }finally{

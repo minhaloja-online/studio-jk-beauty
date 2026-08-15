@@ -20,8 +20,12 @@ service cloud.firestore {
     }
 
     function ehDona() {
+      // .get("papel", "dona") não quebra em contas antigas, criadas antes
+      // de o campo existir — sem isso a regra recusa tudo silenciosamente.
       return request.auth != null
-        && get(/databases/$(banco)/documents/admins/$(request.auth.uid)).data.papel != "profissional";
+        && exists(/databases/$(banco)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(banco)/documents/admins/$(request.auth.uid))
+             .data.get("papel", "dona") != "profissional";
     }
 
     function portaAberta() {
@@ -77,11 +81,10 @@ service cloud.firestore {
       allow delete: if ehDona() && request.auth.uid != uid;
 
       // ---- Caixa de cada profissional ----
-      // Cada uma lê e lança só o próprio movimento. A dona enxerga todas,
-      // para fechar o mês do studio. Nunca é público.
+      // Cada uma lê e lança SÓ o próprio movimento — nem a administradora
+      // enxerga o caixa da outra. Não é regra de tela: é o servidor que recusa.
       match /lancamentos/{id} {
-        allow read, write: if request.auth != null
-                           && (request.auth.uid == uid || ehDona());
+        allow read, write: if request.auth != null && request.auth.uid == uid;
       }
     }
 

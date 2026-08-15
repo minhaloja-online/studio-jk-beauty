@@ -1245,6 +1245,13 @@ function montarProfissionais(){
         recado("Acesso criado. Passe o e-mail e a senha para ela.");
       }catch(e){
         erro.textContent = FB.explicarErro(e);
+        if(e.uidCriado){
+          // o login foi criado; só faltou ligar ao painel
+          const cx = $(".ac-uid", cartao);
+          cx.value = e.uidCriado;
+          $("details", cartao).open = true;
+          erro.textContent += ' O login foi criado — corrija as regras e clique em "Vincular".';
+        }
         console.error(e);
       }finally{
         bt.disabled = false; bt.textContent = "Criar acesso";
