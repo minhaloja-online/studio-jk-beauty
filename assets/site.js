@@ -110,7 +110,12 @@ function pintarFoto(chave, url){
 }
 
 async function aplicarFotos(cfg){
-  const refs = [...Object.values(cfg.imagens), ...cfg.galeriaFotos, ...cfg.servicos.itens.map(i => i.foto)];
+  const refs = [
+    ...Object.values(cfg.imagens),
+    ...cfg.galeriaFotos,
+    ...cfg.servicos.itens.map(i => i.foto),
+    ...(cfg.profissionais || []).map(p => p.foto)
+  ];
   let cache = {};
   if(FB){
     try { cache = await FB.lerVariasMidias(FB.idsDeMidia(refs)); } catch {}
@@ -122,6 +127,7 @@ async function aplicarFotos(cfg){
   montarGaleria();
   montarServicos(resolver);
   montarEquipe(resolver);
+  montarRodapeEquipe();
 }
 
 /* ------------------------------------------------------------
@@ -155,6 +161,50 @@ function zapDe(prof, servico){
 
 const acharProf = (id) => (CFG.profissionais || []).find(p => p.id === id);
 
+/** Contatos de cada profissional no rodapé. */
+function montarRodapeEquipe(){
+  const alvo = $("#rodape-equipe");
+  if(!alvo) return;
+  const time = equipeVisivel();
+  const so = time.length === 1;
+
+  alvo.innerHTML = time.map(p => {
+    const numero = (p.whatsapp || "").replace(/\D/g, "");
+    const linhas = [];
+
+    if(numero) linhas.push(`
+      <li><a href="${zapDe(p)}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6.5C4 15 9 20 17.5 20c1.5 0 2.5-1 2.5-2.2v-2l-4-1.6-1.7 2c-2.6-1.2-4.3-2.9-5.4-5.4l2-1.7L9.3 5h-2C6.1 5 4 5.9 4 6.5z"/></svg>
+        <span>${escapar(formatarZap(numero))}</span></a></li>`);
+
+    if(p.instagram) linhas.push(`
+      <li><a href="${p.instagram}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+        <span>${escapar(arrobaDe(p.instagram))}</span></a></li>`);
+
+    if(!linhas.length) return "";
+    return `<div class="rod-prof">
+      ${so ? "" : `<span class="nome">${escapar(p.nome)}${p.funcao ? `<em>${escapar(p.funcao)}</em>` : ""}</span>`}
+      <ul>${linhas.join("")}</ul>
+    </div>`;
+  }).join("");
+}
+
+/** (93) 99179-7198 a partir de 5593991797198 */
+function formatarZap(n){
+  const s = n.replace(/^55/, "");
+  if(s.length < 10) return n;
+  const ddd = s.slice(0, 2), resto = s.slice(2);
+  const meio = resto.length > 8 ? resto.slice(0, 5) : resto.slice(0, 4);
+  return `(${ddd}) ${meio}-${resto.slice(meio.length)}`;
+}
+
+/** @usuario a partir do endereço do Instagram */
+function arrobaDe(url){
+  const m = String(url).match(/instagram\.com\/([^/?#]+)/i);
+  return m ? "@" + m[1] : url;
+}
+
 function montarEquipe(resolver = (r) => (r?.startsWith("midia:") ? "" : r || "")){
   const alvo = $("#equipe-lista");
   if(!alvo) return;
@@ -165,6 +215,7 @@ function montarEquipe(resolver = (r) => (r?.startsWith("midia:") ? "" : r || "")
   if(time.length < 2){ if(secao) secao.style.display = time.length ? "" : "none"; }
   alvo.innerHTML = time.map((p, i) => {
     const url = resolver(p.foto);
+    p._foto = url;                      // reaproveitada no modal de escolha
     return `
     <article class="prof rev" data-atraso="${i % 4}">
       <div class="arco grao ${url ? "tem-foto" : ""}">
@@ -504,6 +555,7 @@ fotosGaleria = CFG.galeriaFotos.slice();
 montarGaleria();
 montarServicos();
 montarEquipe();
+montarRodapeEquipe();
 
 // e então busca o conteúdo real
 (async () => {

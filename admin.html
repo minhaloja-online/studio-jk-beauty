@@ -887,7 +887,12 @@ function cartaoFoto(chave, rotulo, ref){
 /** Guarda em cache todas as fotos usadas no site (seções, galeria e serviços). */
 async function carregarCacheDeFotos(){
   try{
-    const refs = [...Object.values(CFG.imagens), ...CFG.galeriaFotos, ...CFG.servicos.itens.map(i => i.foto)];
+    const refs = [
+      ...Object.values(CFG.imagens),
+      ...CFG.galeriaFotos,
+      ...CFG.servicos.itens.map(i => i.foto),
+      ...(CFG.profissionais || []).map(p => p.foto)
+    ];
     cacheMidia = await FB.lerVariasMidias(FB.idsDeMidia(refs));
   }catch(e){ console.warn(e); }
 }
