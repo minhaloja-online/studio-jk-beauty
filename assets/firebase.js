@@ -152,17 +152,40 @@ export async function ehAdmin(uid){
 export function explicarErro(e){
   const c = e?.code || "";
   const mapa = {
-    "auth/invalid-credential": "E-mail ou senha não conferem.",
-    "auth/invalid-email":      "Esse e-mail não parece válido.",
-    "auth/user-not-found":     "Não existe conta com esse e-mail.",
-    "auth/wrong-password":     "Senha incorreta.",
-    "auth/weak-password":      "A senha precisa ter pelo menos 6 caracteres.",
+    /* ---- senha / conta ---- */
+    "auth/invalid-credential":  "E-mail ou senha não conferem.",
+    "auth/invalid-email":       "Esse e-mail não parece válido.",
+    "auth/user-not-found":      "Não existe conta com esse e-mail.",
+    "auth/wrong-password":      "Senha incorreta.",
+    "auth/missing-password":    "Digite a senha.",
+    "auth/user-disabled":       "Esta conta foi desativada no Firebase.",
+    "auth/weak-password":       "A senha precisa ter pelo menos 6 caracteres.",
     "auth/email-already-in-use":"Já existe uma conta com esse e-mail.",
-    "auth/too-many-requests":  "Muitas tentativas seguidas. Espere alguns minutos.",
+    "auth/too-many-requests":   "Muitas tentativas seguidas. Espere alguns minutos.",
     "auth/network-request-failed":"Sem conexão com a internet.",
     "auth/requires-recent-login":"Por segurança, saia e entre de novo antes de trocar a senha.",
-    "permission-denied":       "Seu usuário não tem permissão para isso.",
-    "unavailable":             "O banco de dados não respondeu. Tente de novo."
+
+    /* ---- configuração que falta no Console do Firebase ---- */
+    "auth/unauthorized-domain":
+      "Este endereço não está liberado. No Firebase: Authentication → Settings → Domínios autorizados → adicione minhaloja-online.github.io",
+    "auth/operation-not-allowed":
+      "O login por e-mail e senha está desligado. No Firebase: Authentication → Sign-in method → ative E-mail/senha.",
+    "auth/configuration-not-found":
+      "A Autenticação ainda não foi ativada neste projeto. No Firebase: Authentication → Vamos começar → ative E-mail/senha.",
+    "auth/admin-restricted-operation":
+      "O cadastro de novos usuários está bloqueado. No Firebase: Authentication → Settings → User actions.",
+    "auth/invalid-api-key":     "A apiKey em assets/chaves.js está errada.",
+    "auth/api-key-not-valid":   "A apiKey em assets/chaves.js está errada.",
+    "auth/invalid-app-id":      "O appId em assets/chaves.js está errado.",
+    "auth/internal-error":      "O Firebase recusou o pedido. Confira as chaves e se a Autenticação está ativada.",
+
+    /* ---- banco de dados ---- */
+    "permission-denied":
+      "As regras do Firestore não liberaram esta ação. Confira se você publicou o firestore.rules no Console.",
+    "unavailable":              "O banco de dados não respondeu. Tente de novo.",
+    "failed-precondition":      "O Firestore ainda não foi criado neste projeto."
   };
-  return mapa[c] || "Algo deu errado. Tente novamente.";
+  if(mapa[c]) return mapa[c];
+  // sem tradução: mostra o código para dar para investigar sem abrir o console
+  return `Algo deu errado${c ? ` (código: ${c})` : ""}. ${e?.message || ""}`.trim();
 }
