@@ -263,6 +263,10 @@ export function explicarErro(e){
     "failed-precondition":      "O Firestore ainda não foi criado neste projeto."
   };
   if(mapa[c]) return mapa[c];
+
+  // o Firebase às vezes anexa a frase inteira ao código; casa pelo começo
+  const parecido = Object.keys(mapa).find(k => c.startsWith(k));
+  if(parecido) return mapa[parecido];
   // sem tradução: mostra o código para dar para investigar sem abrir o console
   return `Algo deu errado${c ? ` (código: ${c})` : ""}. ${e?.message || ""}`.trim();
 }
