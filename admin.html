@@ -97,6 +97,47 @@ input,textarea,select{ font:inherit; }
 .foto input[type=file]{ display:none; }
 .progresso{ font-size:.72rem; color:var(--rosa); }
 
+/* ---------- FINANCEIRO ---------- */
+.mes-barra{ display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.mes-barra label{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--suave); }
+.mes-barra input{ padding:8px 10px; border:1px solid var(--borda); border-radius:9px; background:var(--branco); font:inherit; }
+
+.painel-num{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+@media(max-width:900px){ .painel-num{ grid-template-columns:repeat(2,1fr); } }
+.num{ border:1px solid var(--borda); border-radius:14px; padding:16px 18px; background:var(--branco); }
+.num b{ display:block; font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; color:var(--suave); margin-bottom:8px; font-weight:500; }
+.num .v{ font-family:var(--display); font-size:1.75rem; line-height:1; }
+.num small{ display:block; font-size:.72rem; color:var(--suave); margin-top:7px; }
+.num.destaque{ background:var(--ameixa); border-color:var(--ameixa); }
+.num.destaque b, .num.destaque small{ color:rgba(247,242,238,.62); }
+.num.destaque .v{ color:var(--dourado); }
+.num .v.negativo{ color:#B4453F; }
+
+.cabeca-bloco{ display:flex; align-items:baseline; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+#grafico{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:12px; align-items:end; min-height:170px; margin-top:16px; }
+.col{ display:grid; align-content:end; justify-items:center; gap:7px; height:100%; }
+.col .barras{ display:flex; align-items:flex-end; gap:4px; height:120px; }
+.col .b{ width:16px; border-radius:5px 5px 0 0; min-height:3px; transition:height .5s ease; }
+.col .b.ent{ background:var(--rosa); }
+.col .b.sai{ background:var(--borda); }
+.col .rot{ font-size:.66rem; color:var(--suave); text-transform:uppercase; letter-spacing:.08em; }
+.chave{ display:inline-flex; align-items:center; gap:6px; font-size:.72rem; color:var(--suave); margin-left:14px; }
+.chave i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+.dupla-forms{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:900px){ .dupla-forms{ grid-template-columns:1fr; } }
+.aviso-linha{ color:#B4453F; font-size:.8rem; min-height:1.1em; margin:0 0 8px; }
+
+.lanc{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--borda); }
+.lanc:last-child{ border-bottom:0; }
+.lanc .dia{ font-size:.72rem; color:var(--suave); width:52px; flex:none; }
+.lanc .txt{ flex:1; min-width:0; }
+.lanc .txt b{ font-weight:500; font-size:.9rem; display:block; }
+.lanc .txt small{ font-size:.72rem; color:var(--suave); }
+.lanc .val{ font-family:var(--display); font-size:1.05rem; white-space:nowrap; }
+.lanc .val.ent{ color:#2E7D5B; }
+.lanc .val.sai{ color:#B4453F; }
+
 /* ---------- SERVIÇOS ---------- */
 .serv-adm{ display:grid; grid-template-columns:190px 1fr; gap:16px; align-items:start;
   border:1px solid var(--borda); border-radius:14px; padding:14px; margin-bottom:14px; background:var(--branco); }
@@ -190,6 +231,7 @@ input,textarea,select{ font:inherit; }
     <button class="aba on" data-aba="avaliacoes">Avaliações <span class="selo esconde" id="conta-pendentes">0</span></button>
     <button class="aba" data-aba="textos">Textos</button>
     <button class="aba" data-aba="servicos">Serviços</button>
+    <button class="aba" data-aba="caixa">Financeiro</button>
     <button class="aba" data-aba="fotos">Fotos</button>
     <button class="aba" data-aba="aparencia">Aparência</button>
     <button class="aba" data-aba="contato">Contato e links</button>
@@ -216,6 +258,64 @@ input,textarea,select{ font:inherit; }
       <h1 class="titulo-pg">Textos</h1>
       <p class="legenda">Tudo que está escrito no site. Para quebrar uma linha no meio de um título, dê enter — o site respeita a quebra.</p>
       <div id="campos-textos"></div>
+    </div>
+
+    <!-- FINANCEIRO -->
+    <div class="pg esconde" id="pg-caixa">
+      <h1 class="titulo-pg">Financeiro</h1>
+      <p class="legenda">Só você enxerga esta aba. Nada daqui aparece no site.</p>
+
+      <div class="mes-barra">
+        <label for="mes">Mês</label>
+        <input type="month" id="mes">
+        <button class="btn mini" id="mes-hoje">Mês atual</button>
+      </div>
+
+      <div class="painel-num" id="numeros"></div>
+
+      <div class="bloco">
+        <div class="cabeca-bloco">
+          <h3>Últimos 6 meses</h3>
+          <span class="desc" id="legenda-grafico"></span>
+        </div>
+        <div id="grafico"></div>
+      </div>
+
+      <div class="dupla-forms">
+        <div class="bloco">
+          <h3>Registrar atendimento</h3>
+          <p class="desc">O que entrou de dinheiro.</p>
+          <div class="dupla">
+            <div class="campo"><label for="r-data">Data</label><input type="date" id="r-data"></div>
+            <div class="campo"><label for="r-valor">Valor recebido (R$)</label><input type="number" id="r-valor" step="0.01" min="0" placeholder="0,00"></div>
+          </div>
+          <div class="campo"><label for="r-servico">Serviço</label><select id="r-servico"></select></div>
+          <div class="campo"><label for="r-desc">Observação (opcional)</label><input type="text" id="r-desc" placeholder="Nome da cliente, forma de pagamento…"></div>
+          <p class="aviso-linha" id="r-erro"></p>
+          <button class="btn" id="add-receita">Lançar entrada</button>
+        </div>
+
+        <div class="bloco">
+          <h3>Registrar custo</h3>
+          <p class="desc">Material, ferramenta, qualquer gasto do studio.</p>
+          <div class="dupla">
+            <div class="campo"><label for="d-data">Data</label><input type="date" id="d-data"></div>
+            <div class="campo"><label for="d-valor">Valor pago (R$)</label><input type="number" id="d-valor" step="0.01" min="0" placeholder="0,00"></div>
+          </div>
+          <div class="campo"><label for="d-cat">Categoria</label><select id="d-cat">
+            <option>Materiais</option><option>Ferramentas</option><option>Aluguel</option>
+            <option>Energia e água</option><option>Marketing</option><option>Outros</option>
+          </select></div>
+          <div class="campo"><label for="d-desc">O que foi</label><input type="text" id="d-desc" placeholder="Ex.: esmaltes, lixas, cabine de LED"></div>
+          <p class="aviso-linha" id="d-erro"></p>
+          <button class="btn" id="add-despesa">Lançar custo</button>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <h3>Lançamentos do mês</h3>
+        <div id="lista-lancamentos"></div>
+      </div>
     </div>
 
     <!-- SERVIÇOS -->
@@ -455,6 +555,10 @@ async function abrirPainel(user){
   montarAparencia();
   await montarFotos();
   montarServicos();
+  $("#mes").value = mesAtual();
+  $("#r-data").value = $("#d-data").value = hojeISO();
+  atualizarSeletorServicos();
+  await carregarCaixa();
   await carregarAvaliacoes();
   marcarSujo(false);
 }
@@ -772,6 +876,7 @@ function montarServicos(){
     </div>`).join("");
 
   ligarCampos(lista);
+  atualizarSeletorServicos();
   $$(".foto", lista).forEach(ligarFoto);
 
   $$(".serv-adm", lista).forEach(cartao => {
@@ -941,6 +1046,192 @@ async function carregarAvaliacoes(){
     }
   }));
 }
+
+/* ============================================================
+   ABA FINANCEIRO
+   Guarda entradas e custos em lancamentos/{id} e calcula
+   faturamento, lucro e o dízimo do mês escolhido.
+   ============================================================ */
+const dinheiro = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+const hojeISO = () => new Date().toLocaleDateString("sv-SE");        // AAAA-MM-DD no fuso local
+const mesAtual = () => hojeISO().slice(0, 7);                        // AAAA-MM
+const ultimoDia = (mes) => {
+  const [a, m] = mes.split("-").map(Number);
+  return `${mes}-${String(new Date(a, m, 0).getDate()).padStart(2, "0")}`;
+};
+const mesAtras = (mes, n) => {
+  const [a, m] = mes.split("-").map(Number);
+  const d = new Date(a, m - 1 - n, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+
+let lancamentos = [];        // últimos 6 meses, já carregados
+let baseDizimo = "faturamento";
+
+async function carregarCaixa(){
+  const mes = $("#mes").value || mesAtual();
+  const inicio = mesAtras(mes, 5) + "-01";
+  const fim = ultimoDia(mes);
+
+  try{
+    lancamentos = await FB.lancamentosEntre(inicio, fim);
+  }catch(e){
+    lancamentos = [];
+    recado(FB.explicarErro(e), true);
+    console.error(e);
+  }
+  desenharCaixa();
+}
+
+function somaDoMes(mes){
+  const doMes = lancamentos.filter(l => l.data?.startsWith(mes));
+  const entra = doMes.filter(l => l.tipo === "receita").reduce((s, l) => s + (+l.valor || 0), 0);
+  const sai   = doMes.filter(l => l.tipo === "despesa").reduce((s, l) => s + (+l.valor || 0), 0);
+  return { entra, sai, lucro: entra - sai, itens: doMes };
+}
+
+function desenharCaixa(){
+  const mes = $("#mes").value || mesAtual();
+  const { entra, sai, lucro, itens } = somaDoMes(mes);
+  const dizimo = (baseDizimo === "lucro" ? Math.max(0, lucro) : entra) * 0.10;
+  const margem = entra > 0 ? Math.round((lucro / entra) * 100) : 0;
+
+  $("#numeros").innerHTML = `
+    <div class="num">
+      <b>Faturamento</b>
+      <span class="v">${dinheiro.format(entra)}</span>
+      <small>${itens.filter(i => i.tipo === "receita").length} atendimento(s)</small>
+    </div>
+    <div class="num">
+      <b>Custos</b>
+      <span class="v">${dinheiro.format(sai)}</span>
+      <small>materiais e demais gastos</small>
+    </div>
+    <div class="num">
+      <b>Lucro real</b>
+      <span class="v ${lucro < 0 ? "negativo" : ""}">${dinheiro.format(lucro)}</span>
+      <small>${entra > 0 ? `margem de ${margem}%` : "sem entradas no mês"}</small>
+    </div>
+    <div class="num destaque">
+      <b>Dízimo (10%)</b>
+      <span class="v">${dinheiro.format(dizimo)}</span>
+      <small>
+        <label style="cursor:pointer;display:inline-flex;gap:5px;align-items:center">
+          <input type="radio" name="base-dizimo" value="faturamento" ${baseDizimo === "faturamento" ? "checked" : ""}> do faturamento
+        </label>
+        <label style="cursor:pointer;display:inline-flex;gap:5px;align-items:center;margin-left:8px">
+          <input type="radio" name="base-dizimo" value="lucro" ${baseDizimo === "lucro" ? "checked" : ""}> do lucro
+        </label>
+      </small>
+    </div>`;
+
+  $$('input[name="base-dizimo"]').forEach(r => r.addEventListener("change", () => {
+    baseDizimo = r.value;
+    desenharCaixa();
+  }));
+
+  /* gráfico dos 6 meses */
+  const meses = [5,4,3,2,1,0].map(n => mesAtras(mes, n));
+  const dados = meses.map(m => ({ m, ...somaDoMes(m) }));
+  const teto = Math.max(...dados.map(d => Math.max(d.entra, d.sai)), 1);
+
+  $("#legenda-grafico").innerHTML =
+    `<span class="chave"><i style="background:var(--rosa)"></i> entradas</span>
+     <span class="chave"><i style="background:var(--borda)"></i> custos</span>`;
+
+  $("#grafico").innerHTML = dados.map(d => `
+    <div class="col">
+      <div class="barras" title="${MESES[+d.m.slice(5) - 1]}: entrou ${dinheiro.format(d.entra)}, saiu ${dinheiro.format(d.sai)}">
+        <span class="b ent" style="height:${Math.round(d.entra / teto * 120)}px"></span>
+        <span class="b sai" style="height:${Math.round(d.sai / teto * 120)}px"></span>
+      </div>
+      <span class="rot">${MESES[+d.m.slice(5) - 1]}</span>
+    </div>`).join("");
+
+  /* lista do mês */
+  const alvo = $("#lista-lancamentos");
+  if(!itens.length){
+    alvo.innerHTML = `<p class="desc">Nenhum lançamento neste mês ainda.</p>`;
+    return;
+  }
+  alvo.innerHTML = itens
+    .sort((a, b) => b.data.localeCompare(a.data))
+    .map(l => {
+      const entrada = l.tipo === "receita";
+      return `<div class="lanc" data-id="${l.id}">
+        <span class="dia">${l.data.slice(8)}/${l.data.slice(5,7)}</span>
+        <span class="txt">
+          <b>${escaparTxt(l.descricao || l.categoria || (entrada ? "Atendimento" : "Custo"))}</b>
+          <small>${escaparTxt(entrada ? (l.categoria || "Atendimento") : (l.categoria || "Custo"))}</small>
+        </span>
+        <span class="val ${entrada ? "ent" : "sai"}">${entrada ? "+" : "−"} ${dinheiro.format(l.valor)}</span>
+        <button class="btn mini perigo apagar-lanc">Excluir</button>
+      </div>`;
+    }).join("");
+
+  $$(".apagar-lanc", alvo).forEach(bt => bt.addEventListener("click", async () => {
+    const linha = bt.closest(".lanc");
+    if(!confirm("Excluir este lançamento?")) return;
+    bt.disabled = true;
+    try{
+      await FB.excluirLancamento(linha.dataset.id);
+      lancamentos = lancamentos.filter(l => l.id !== linha.dataset.id);
+      desenharCaixa();
+      recado("Lançamento excluído.");
+    }catch(e){ recado(FB.explicarErro(e), true); bt.disabled = false; }
+  }));
+}
+
+const escaparTxt = (t) => String(t ?? "").replace(/[&<>"']/g, ch =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+
+/* lista de serviços no seletor de entrada */
+function atualizarSeletorServicos(){
+  const sel = $("#r-servico");
+  const escolhido = sel.value;
+  sel.innerHTML = CFG.servicos.itens
+    .map(i => `<option>${escaparTxt(i.nome)}</option>`).join("") + `<option>Outro</option>`;
+  if(escolhido) sel.value = escolhido;
+}
+
+async function lancar(tipo){
+  const p = tipo === "receita" ? "r" : "d";
+  const erro = $(`#${p}-erro`);
+  const data = $(`#${p}-data`).value;
+  const valor = parseFloat($(`#${p}-valor`).value);
+
+  if(!data) return erro.textContent = "Escolha a data.";
+  if(!(valor > 0)) return erro.textContent = "Digite um valor maior que zero.";
+  const descricao = $(`#${p}-desc`).value.trim();
+  if(tipo === "despesa" && !descricao) return erro.textContent = "Escreva o que foi comprado.";
+  erro.textContent = "";
+
+  const bt = $(tipo === "receita" ? "#add-receita" : "#add-despesa");
+  bt.disabled = true; bt.textContent = "Lançando…";
+  try{
+    await FB.salvarLancamento({
+      tipo, data, valor,
+      descricao,
+      categoria: tipo === "receita" ? $("#r-servico").value : $("#d-cat").value
+    });
+    $(`#${p}-valor`).value = ""; $(`#${p}-desc`).value = "";
+    await carregarCaixa();
+    recado(tipo === "receita" ? "Entrada lançada." : "Custo lançado.");
+  }catch(e){
+    erro.textContent = FB.explicarErro(e);
+    console.error(e);
+  }finally{
+    bt.disabled = false;
+    bt.textContent = tipo === "receita" ? "Lançar entrada" : "Lançar custo";
+  }
+}
+
+$("#add-receita").addEventListener("click", () => lancar("receita"));
+$("#add-despesa").addEventListener("click", () => lancar("despesa"));
+$("#mes").addEventListener("change", carregarCaixa);
+$("#mes-hoje").addEventListener("click", () => { $("#mes").value = mesAtual(); carregarCaixa(); });
 
 /* ============================================================
    SALVAR

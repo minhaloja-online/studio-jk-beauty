@@ -57,6 +57,11 @@ service cloud.firestore {
       allow update, delete: if ehAdmin();
     }
 
+    // ---- Caixa: faturamento e custos (nunca público) ----
+    match /lancamentos/{id} {
+      allow read, write: if ehAdmin();
+    }
+
     // ---- Quem pode entrar no painel ----
     match /admins/{uid} {
       // cada admin consegue conferir o próprio acesso
