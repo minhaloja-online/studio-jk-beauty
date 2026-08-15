@@ -115,6 +115,8 @@ input,textarea,select{ font:inherit; }
 /* ---------- FINANCEIRO ---------- */
 .mes-barra{ display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
 .mes-barra label{ font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--suave); }
+.dono-caixa{ font-size:.78rem; color:var(--suave); margin-left:6px; }
+.dono-caixa b{ color:var(--tinta); font-weight:500; }
 .mes-barra input{ padding:8px 10px; border:1px solid var(--borda); border-radius:9px; background:var(--branco); font:inherit; }
 
 .painel-num{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
@@ -576,24 +578,14 @@ $("#sair").addEventListener("click", async () => {
    ABERTURA DO PAINEL
    ============================================================ */
 let PERFIL = null;      // dados da conta logada
-let SOU_DONA = true;    // dona = acesso total; profissional = só o dela
+let SOU_DONA = true;    // administradora: só ela cria acessos novos
 let MEU_PID = "";       // id da profissional ligada a esta conta
 
-/** Esconde as abas que não pertencem a quem entrou. */
+/** Todas as profissionais mexem no site inteiro: textos, fotos, serviços,
+    avaliações. O que é individual é o financeiro — sempre o da própria
+    conta — e a criação de acessos, que segue com a administradora. */
 function ajustarPermissoes(){
-  const soDona = ["textos", "fotos", "aparencia", "contato", "avaliacoes", "equipe"];
-  $$(".aba").forEach(b => {
-    const dela = !soDona.includes(b.dataset.aba);
-    b.classList.toggle("esconde", !SOU_DONA && !dela);
-  });
-  if(!SOU_DONA){
-    const tit = $("#pg-servicos .titulo-pg");
-    if(tit) tit.textContent = "Meus serviços";
-    const legenda = $("#pg-servicos .legenda");
-    if(legenda) legenda.textContent = "Os serviços que você atende. Eles aparecem no site com o seu nome e o seu WhatsApp.";
-    const ativa = $(".aba:not(.esconde)");
-    if(ativa && $(".aba.ativa")?.classList.contains("esconde")) ativa.click();
-  }
+  $$(".aba").forEach(b => b.classList.remove("esconde"));
 }
 
 async function abrirPainel(user){
@@ -911,14 +903,13 @@ function montarServicos(){
 
   const lista = $("#lista-servicos");
   const itens = CFG.servicos.itens;
-  $("#campos-servicos-topo").classList.toggle("esconde", !SOU_DONA);
 
   if(!itens.length){
     lista.innerHTML = `<p class="desc">Nenhum serviço cadastrado. Use o botão abaixo para criar o primeiro.</p>`;
     return;
   }
 
-  lista.innerHTML = itens.map((it, i) => (!SOU_DONA && it.profissionalId !== MEU_PID) ? "" : `
+  lista.innerHTML = itens.map((it, i) => `
     <div class="serv-adm ${it.visivel === false ? "escondido" : ""}" data-i="${i}">
       ${cartaoFoto(`servicos.itens.${i}.foto`, "Foto do serviço", it.foto)}
       <div class="dados">
@@ -988,7 +979,7 @@ function montarServicos(){
 
 $("#add-servico").addEventListener("click", () => {
   const novo = SERVICO_NOVO();
-  if(!SOU_DONA) novo.profissionalId = MEU_PID;
+  if(MEU_PID) novo.profissionalId = MEU_PID;   // já nasce no nome de quem criou
   CFG.servicos.itens.push(novo);
   marcarSujo();
   montarServicos();
@@ -1178,7 +1169,7 @@ function montarProfissionais(){
             ${acesso && acesso.papel === "profissional"
               ? `<button class="btn mini perigo tirar-acesso" data-uid="${acesso.uid}" style="margin-left:auto">Remover acesso</button>` : ""}
           </div>
-          ${acesso ? "" : `
+          ${(acesso || !SOU_DONA) ? "" : `
             <button class="btn mini abrir-acesso">Criar acesso para ela</button>
             <div class="form-acesso">
               <p class="desc" style="margin-top:12px">Ela vai entrar no mesmo endereço do painel, com este e-mail e senha. Poderá lançar o próprio financeiro e cuidar dos serviços dela.</p>
@@ -1311,32 +1302,12 @@ const mesAtras = (mes, n) => {
 
 let lancamentos = [];        // últimos 6 meses, já carregados
 let baseDizimo = "faturamento";
-let verDeQuem = "eu";        // "eu" ou o uid de uma profissional, ou "todas" (só a dona)
-
-/** Quem tem caixa: as contas ligadas a uma profissional, mais a própria dona. */
-function contasComCaixa(){
-  const mapa = new Map();
-  mapa.set(FB.auth.currentUser.uid, PERFIL?.nome || $("#meu-email").textContent || "Eu");
-  ACESSOS.forEach(a => {
-    const prof = CFG.profissionais.find(p => p.id === a.profissionalId);
-    mapa.set(a.uid, prof?.nome || a.nome || a.email || "Profissional");
-  });
-  return [...mapa].map(([uid, nome]) => ({ uid, nome }));
-}
-
-function montarFiltroQuem(){
-  const alvo = $("#filtro-quem");
-  if(!SOU_DONA || contasComCaixa().length < 2){ alvo.innerHTML = ""; return; }
-  alvo.innerHTML = `
-    <label style="font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--suave);margin-left:8px">Ver</label>
-    <select id="quem-caixa" style="padding:8px 10px;border:1px solid var(--borda);border-radius:9px;background:var(--branco);font:inherit">
-      <option value="eu">Só o meu</option>
-      <option value="todas">O studio inteiro</option>
-      ${contasComCaixa().filter(c => c.uid !== FB.auth.currentUser.uid)
-        .map(c => `<option value="${c.uid}">${escaparTxt(c.nome)}</option>`).join("")}
-    </select>`;
-  $("#quem-caixa").value = verDeQuem;
-  $("#quem-caixa").addEventListener("change", e => { verDeQuem = e.target.value; carregarCaixa(); });
+/** Etiqueta de quem é este caixa — deixa claro que o número é só dela. */
+function montarDonoDoCaixa(){
+  const nome = CFG.profissionais.find(p => p.id === MEU_PID)?.nome
+            || PERFIL?.nome || $("#meu-email").textContent || "";
+  $("#filtro-quem").innerHTML = nome
+    ? `<span class="dono-caixa">Lançamentos de <b>${escaparTxt(nome)}</b></span>` : "";
 }
 
 async function carregarCaixa(){
@@ -1344,21 +1315,15 @@ async function carregarCaixa(){
   const inicio = mesAtras(mes, 5) + "-01";
   const fim = ultimoDia(mes);
 
-  const eu = FB.auth.currentUser.uid;
-  const alvos = !SOU_DONA || verDeQuem === "eu" ? [eu]
-              : verDeQuem === "todas" ? contasComCaixa().map(c => c.uid)
-              : [verDeQuem];
-
   try{
-    const partes = await Promise.all(alvos.map(uid =>
-      FB.lancamentosEntre(uid, inicio, fim).catch(() => [])));
-    lancamentos = partes.flat();
+    // sempre e só a conta que está logada
+    lancamentos = await FB.lancamentosEntre(FB.auth.currentUser.uid, inicio, fim);
   }catch(e){
     lancamentos = [];
     recado(FB.explicarErro(e), true);
     console.error(e);
   }
-  montarFiltroQuem();
+  montarDonoDoCaixa();
   desenharCaixa();
 }
 
@@ -1441,11 +1406,10 @@ function desenharCaixa(){
         <span class="dia">${l.data.slice(8)}/${l.data.slice(5,7)}</span>
         <span class="txt">
           <b>${escaparTxt(l.descricao || l.categoria || (entrada ? "Atendimento" : "Custo"))}</b>
-          <small>${escaparTxt(l.categoria || (entrada ? "Atendimento" : "Custo"))}${
-            verDeQuem === "todas" ? " · " + escaparTxt(contasComCaixa().find(c => c.uid === l.uid)?.nome || "") : ""}</small>
+          <small>${escaparTxt(l.categoria || (entrada ? "Atendimento" : "Custo"))}</small>
         </span>
         <span class="val ${entrada ? "ent" : "sai"}">${entrada ? "+" : "−"} ${dinheiro.format(l.valor)}</span>
-        ${(l.uid === FB.auth.currentUser.uid || SOU_DONA) ? `<button class="btn mini perigo apagar-lanc">Excluir</button>` : ""}
+        <button class="btn mini perigo apagar-lanc">Excluir</button>
       </div>`;
     }).join("");
 
@@ -1470,7 +1434,6 @@ function atualizarSeletorServicos(){
   const sel = $("#r-servico");
   const escolhido = sel.value;
   sel.innerHTML = CFG.servicos.itens
-    .filter(i => SOU_DONA || !i.profissionalId || i.profissionalId === MEU_PID)
     .map(i => `<option>${escaparTxt(i.nome)}</option>`).join("") + `<option>Outro</option>`;
   if(escolhido) sel.value = escolhido;
 }
