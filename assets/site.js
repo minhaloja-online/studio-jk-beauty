@@ -4,7 +4,7 @@
    os efeitos. Se o Firebase não responder, o site continua
    funcionando com o conteúdo padrão — nunca fica em branco.
    ============================================================ */
-import { PADRAO, mesclar, migrar, valorEm, urlDasFontes } from "./padrao.js";
+import { PADRAO, mesclar, migrar, valorEm, urlDasFontes, DIAS } from "./padrao.js";
 
 const $  = (s, e = document) => e.querySelector(s);
 const $$ = (s, e = document) => [...e.querySelectorAll(s)];
@@ -84,6 +84,8 @@ function aplicarContato(c){
     el.setAttribute("rel", "noopener");
   };
   const time = equipeVisivel();
+
+  // conversa direta (botão flutuante): escolhe a profissional quando há duas
   $$("[data-zap]").forEach(el => {
     if(time.length > 1){
       el.setAttribute("href", "#");
@@ -93,6 +95,9 @@ function aplicarContato(c){
       abrir(el, time.length ? zapDe(time[0]) : zap());
     }
   });
+
+  // agendamento: abre o fluxo de dia e hora
+  $$("[data-agendar]").forEach(el => el.setAttribute("href", "#"));
   $$("[data-insta]").forEach(el => abrir(el, c.instagram));
   $$("[data-mapa]").forEach(el => abrir(el, c.mapsLink));
   $("#frame-mapa").src = "https://www.google.com/maps?q=" + encodeURIComponent(c.mapsBusca) + "&output=embed";
@@ -128,6 +133,7 @@ async function aplicarFotos(cfg){
   montarServicos(resolver);
   montarEquipe(resolver);
   montarRodapeEquipe();
+  montarZapsDoLocal();
 }
 
 /* ------------------------------------------------------------
@@ -161,7 +167,272 @@ function zapDe(prof, servico){
 
 const acharProf = (id) => (CFG.profissionais || []).find(p => p.id === id);
 
+/* ============================================================
+   AGENDAMENTO PELO SITE
+   A cliente escolhe profissional → serviço → dia → hora.
+   O pedido nasce como "aguardando validação" e só tranca a agenda
+   quando a profissional confirmar no painel.
+   ============================================================ */
+const AG = { prof: null, servico: null, data: null, hora: null, link: "" };
+
+const mm  = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
+const hhmm = (min) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+const iso  = (d) => d.toLocaleDateString("sv-SE");
+const porExtenso = (isoData) => {
+  const [a, m, dia] = isoData.split("-").map(Number);
+  const d = new Date(a, m - 1, dia);
+  return d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+};
+const duracaoTexto = (min) => {
+  const h = Math.floor(min / 60), r = min % 60;
+  return h && r ? `${h}h${String(r).padStart(2, "0")}` : h ? `${h}h` : `${r} min`;
+};
+
+/** Serviços que a profissional escolhida atende. */
+function servicosDe(prof){
+  return CFG.servicos.itens.filter(s =>
+    s.visivel !== false && (s.nome || "").trim() &&
+    (!s.profissionalId || s.profissionalId === prof.id));
+}
+
+/** Grade de horários livres de um dia, já descontando o que está ocupado. */
+function horariosLivres(prof, isoData, duracao, ocupados){
+  const dia = DIAS[new Date(isoData + "T12:00:00").getDay()].id;
+  const janela = prof.horarios?.[dia];
+  if(!janela || janela.ativo === false) return [];
+
+  const abre = mm(janela.de), fecha = mm(janela.ate);
+  const passo = Math.max(15, +prof.intervalo || 30);
+  const almoco = prof.almoco?.ativo ? [mm(prof.almoco.de), mm(prof.almoco.ate)] : null;
+
+  const agora = new Date();
+  const limite = isoData === iso(agora)
+    ? agora.getHours() * 60 + agora.getMinutes() + (+prof.antecedenciaHoras || 0) * 60
+    : -1;
+
+  // só o que a profissional já confirmou ocupa lugar
+  const tomados = ocupados
+    .filter(o => o.status === "agendado" || o.status === "concluido")
+    .map(o => [mm(o.inicio), mm(o.fim)]);
+
+  const livres = [];
+  for(let t = abre; t + duracao <= fecha; t += passo){
+    const fim = t + duracao;
+    if(t < limite) continue;
+    if(almoco && t < almoco[1] && fim > almoco[0]) continue;
+    if(tomados.some(([a, b]) => t < b && fim > a)) continue;
+    livres.push(hhmm(t));
+  }
+  return livres;
+}
+
+/* ---- telas ---- */
+function irParaEtapa(n){
+  $$("#agendar .etapa").forEach(e => e.classList.toggle("ativa", +e.dataset.etapa === n));
+  $$("#agendar .trilho .ponto").forEach(p => {
+    const i = +p.dataset.etapa;
+    p.classList.toggle("ativo", i === n);
+    p.classList.toggle("feito", i < n);
+  });
+  $("#agendar .caixa").scrollTop = 0;
+}
+
+function abrirAgendamento(servicoNome){
+  const time = equipeVisivel();
+  if(!time.length) return;
+
+  AG.prof = null; AG.servico = null; AG.data = null; AG.hora = null;
+  $("#ag-erro").textContent = "";
+
+  $("#ag-profs").innerHTML = time.map(p => `
+    <button class="opcao" data-prof="${p.id}">
+      <span class="av" style="${p._foto ? `background-image:url('${p._foto}')` : ""}">${p._foto ? "" : escapar((p.nome || "?")[0])}</span>
+      <span class="txt"><b>${escapar(p.nome)}</b><small>${escapar(p.funcao || "")}</small></span>
+    </button>`).join("");
+
+  $("#agendar").classList.add("aberto");
+  document.body.classList.add("travado");
+
+  // com uma só profissional, ou quando o serviço já tem dona, pula etapas
+  if(time.length === 1){ escolherProfissional(time[0].id, servicoNome); return; }
+  const dono = servicoNome && acharProf(
+    CFG.servicos.itens.find(s => s.nome === servicoNome)?.profissionalId);
+  if(dono && dono.visivel !== false){ escolherProfissional(dono.id, servicoNome); return; }
+  irParaEtapa(1);
+}
+
+function fecharAgendamento(){
+  $("#agendar").classList.remove("aberto");
+  document.body.classList.remove("travado");
+}
+
+function escolherProfissional(id, servicoNome){
+  AG.prof = acharProf(id);
+  const lista = servicosDe(AG.prof);
+
+  $("#ag-servicos").innerHTML = lista.length ? lista.map(s => `
+    <button class="opcao" data-servico="${escapar(s.nome)}">
+      <span class="txt"><b>${escapar(s.nome)}</b><small>${escapar(s.preco || "")}</small></span>
+      <span class="tempo">${duracaoTexto(+s.duracao || 60)}</span>
+    </button>`).join("")
+    : `<p class="dica">Nenhum serviço cadastrado para ela ainda.</p>`;
+
+  const jaEscolhido = servicoNome && lista.find(s => s.nome === servicoNome);
+  if(jaEscolhido) return escolherServico(jaEscolhido.nome);
+  irParaEtapa(2);
+}
+
+function escolherServico(nome){
+  AG.servico = servicosDe(AG.prof).find(s => s.nome === nome);
+  if(!AG.servico) return;
+  $("#ag-resumo-servico").textContent =
+    `${AG.servico.nome} · ${duracaoTexto(+AG.servico.duracao || 60)} reservadas com ${AG.prof.nome}`;
+  montarDias();
+  irParaEtapa(3);
+}
+
+function montarDias(){
+  const hoje = new Date();
+  const total = Math.min(60, +AG.prof.diasAFrente || 45);
+  const dias = [];
+  for(let i = 0; i < total; i++){
+    const d = new Date(hoje); d.setDate(hoje.getDate() + i);
+    const cfgDia = AG.prof.horarios?.[DIAS[d.getDay()].id];
+    if(!cfgDia || cfgDia.ativo === false) continue;
+    dias.push(d);
+  }
+
+  $("#ag-dias").innerHTML = dias.slice(0, 21).map((d, i) => `
+    <button data-dia="${iso(d)}">
+      <small>${DIAS[d.getDay()].curto}</small>
+      <b>${String(d.getDate()).padStart(2, "0")}</b>
+      <i>${d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</i>
+    </button>`).join("") || `<p class="dica">Nenhum dia de atendimento configurado.</p>`;
+
+  if(dias.length) escolherDia(iso(dias[0]));
+}
+
+async function escolherDia(isoData){
+  AG.data = isoData; AG.hora = null;
+  $$("#ag-dias button").forEach(b => b.classList.toggle("on", b.dataset.dia === isoData));
+  $("#ag-horas").innerHTML = `<p class="nada">Vendo os horários livres…</p>`;
+
+  let ocupados = [];
+  try{
+    ocupados = FB ? await FB.agendaDoDia(AG.prof.id, isoData) : [];
+  }catch(e){ console.warn("Não deu para ler a agenda:", e); }
+
+  const livres = horariosLivres(AG.prof, isoData, +AG.servico.duracao || 60, ocupados);
+  $("#ag-horas").innerHTML = livres.length
+    ? livres.map(h => `<button data-hora="${h}">${h}</button>`).join("")
+    : `<p class="nada">Nenhum horário livre neste dia para esse serviço.<br>Tente outra data.</p>`;
+}
+
+function escolherHora(h){
+  AG.hora = h;
+  const dur = +AG.servico.duracao || 60;
+  const fim = hhmm(mm(h) + dur);
+
+  $("#ag-resumo").innerHTML = `
+    <div><span>Profissional</span><b>${escapar(AG.prof.nome)}</b></div>
+    <div><span>Serviço</span><b>${escapar(AG.servico.nome)}</b></div>
+    <div><span>Dia</span><b>${porExtenso(AG.data)}</b></div>
+    <div><span>Horário</span><b>${h} às ${fim} (${duracaoTexto(dur)})</b></div>`;
+
+  $("#ag-alerta").innerHTML =
+    `Para confirmar, é preciso enviar a mensagem no WhatsApp de <b>${escapar(AG.prof.nome)}</b>. ` +
+    `O horário fica reservado quando ela responder confirmando.`;
+
+  irParaEtapa(4);
+}
+
+async function enviarPedido(){
+  const nome = $("#ag-nome").value.trim();
+  const erro = $("#ag-erro");
+  if(nome.length < 2){ erro.textContent = "Escreva seu nome para a profissional saber quem é."; return; }
+  erro.textContent = "";
+
+  const bt = $("#ag-enviar");
+  bt.disabled = true; $("span", bt).textContent = "Registrando…";
+
+  const dur = +AG.servico.duracao || 60;
+  const fim = hhmm(mm(AG.hora) + dur);
+  const texto =
+    `Olá, ${AG.prof.nome}! Quero confirmar um horário pelo site do Studio JK Beauty:\n\n` +
+    `Serviço: ${AG.servico.nome}\n` +
+    `Dia: ${porExtenso(AG.data)}\n` +
+    `Horário: ${AG.hora} às ${fim}\n` +
+    `Nome: ${nome}\n\n` +
+    `Pode confirmar para mim?`;
+  const numero = (AG.prof.whatsapp || "").replace(/\D/g, "") || CFG.contato.whatsapp;
+  AG.link = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+
+  // abre o WhatsApp primeiro: se o registro falhar, a cliente ainda fala com ela
+  const janela = window.open(AG.link, "_blank", "noopener");
+
+  try{
+    if(FB) await FB.pedirHorario({
+      profissionalId: AG.prof.id,
+      data: AG.data, inicio: AG.hora, fim, duracao: dur,
+      servico: AG.servico.nome, cliente: nome
+    });
+  }catch(e){
+    console.warn("O pedido não foi registrado no painel:", e);
+  }
+
+  $("#ag-final").innerHTML = janela
+    ? `Agora envie a mensagem que abrimos no WhatsApp de <b>${escapar(AG.prof.nome)}</b>. Enquanto ela não confirmar, o horário segue disponível para outras clientes.`
+    : `Toque no botão abaixo para abrir o WhatsApp de <b>${escapar(AG.prof.nome)}</b> e enviar a mensagem.`;
+
+  bt.disabled = false; $("span", bt).textContent = "Enviar no WhatsApp";
+  irParaEtapa(5);
+}
+
+function ligarAgendamento(){
+  $("#ag-fechar").addEventListener("click", fecharAgendamento);
+  $("#ag-terminar").addEventListener("click", fecharAgendamento);
+  $("#agendar").addEventListener("click", e => { if(e.target.id === "agendar") fecharAgendamento(); });
+  $("#ag-reenviar").addEventListener("click", () => window.open(AG.link, "_blank", "noopener"));
+  $("#ag-enviar").addEventListener("click", enviarPedido);
+
+  $$("#agendar .voltar").forEach(b =>
+    b.addEventListener("click", () => irParaEtapa(+b.dataset.voltar)));
+
+  $("#ag-profs").addEventListener("click", e => {
+    const b = e.target.closest("[data-prof]");
+    if(b) escolherProfissional(b.dataset.prof);
+  });
+  $("#ag-servicos").addEventListener("click", e => {
+    const b = e.target.closest("[data-servico]");
+    if(b) escolherServico(b.dataset.servico);
+  });
+  $("#ag-dias").addEventListener("click", e => {
+    const b = e.target.closest("[data-dia]");
+    if(b) escolherDia(b.dataset.dia);
+  });
+  $("#ag-horas").addEventListener("click", e => {
+    const b = e.target.closest("[data-hora]");
+    if(b) escolherHora(b.dataset.hora);
+  });
+}
+
 /** Contatos de cada profissional no rodapé. */
+/** WhatsApp de cada profissional na seção "Onde ficamos". */
+function montarZapsDoLocal(){
+  const alvo = $("#local-zaps");
+  if(!alvo) return;
+  const time = equipeVisivel().filter(p => (p.whatsapp || "").replace(/\D/g, ""));
+  if(!time.length){
+    alvo.innerHTML = `<span>${escapar(CFG.contato.whatsappTexto || "")}</span>`;
+    return;
+  }
+  alvo.innerHTML = time.map(p => `
+    <a href="${zapDe(p)}" target="_blank" rel="noopener">
+      ${escapar(formatarZap(p.whatsapp.replace(/\D/g, "")))}
+      <i>${escapar(p.nome)}</i>
+    </a>`).join("");
+}
+
 function montarRodapeEquipe(){
   const alvo = $("#rodape-equipe");
   if(!alvo) return;
@@ -277,9 +548,7 @@ function montarServicos(resolver = (r) => (r?.startsWith("midia:") ? "" : r || "
       <p>${escapar(s.texto || "")}</p>
       <div class="rodape">
         <span class="preco">${escapar(s.preco || "")}</span>
-        <a class="marcar" ${mostraDona || !varias
-          ? `href="${zapDe(dona, s.nome)}" target="_blank" rel="noopener"`
-          : `href="#" data-escolher="${escapar(s.nome)}"`}>Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="marcar" href="#" data-agendar="${escapar(s.nome)}">Agendar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
     </article>`;
   }).join("");
@@ -512,11 +781,20 @@ $("#enviar-av").onclick = async () => {
 
 /* teclado */
   document.addEventListener("click", e => {
+    const marcar = e.target.closest("[data-agendar]");
+    if(marcar){
+      e.preventDefault();
+      abrirAgendamento(marcar.dataset.agendar || "");
+      return;
+    }
     const gatilho = e.target.closest("[data-escolher]");
-    if(!gatilho) return;
-    e.preventDefault();
-    abrirEscolha(gatilho.dataset.escolher || "");
+    if(gatilho){
+      e.preventDefault();
+      abrirEscolha(gatilho.dataset.escolher || "");
+    }
   });
+
+  ligarAgendamento();
 
   $("#fechar-escolher").addEventListener("click", fecharEscolha);
   $("#escolher").addEventListener("click", e => { if(e.target.id === "escolher") fecharEscolha(); });
@@ -524,6 +802,8 @@ $("#enviar-av").onclick = async () => {
 
 addEventListener("keydown", e => {
   if(e.key === "Escape"){
+    if($("#agendar").classList.contains("aberto")) fecharAgendamento();
+    if($("#escolher").classList.contains("aberto")) fecharEscolha();
     if(lupa.classList.contains("aberto")) fechaLupa();
     if(modal.classList.contains("aberto")) fechaModal();
     if(painel.classList.contains("aberto")) alterna(false);
@@ -556,6 +836,7 @@ montarGaleria();
 montarServicos();
 montarEquipe();
 montarRodapeEquipe();
+montarZapsDoLocal();
 
 // e então busca o conteúdo real
 (async () => {

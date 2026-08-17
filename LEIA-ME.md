@@ -89,6 +89,29 @@ Enquanto nada foi salvo no painel, o site usa o conteúdo de `assets/padrao.js`.
 
 ---
 
+## Agenda: um índice a criar no Firestore
+
+A agenda do painel consulta os agendamentos de uma profissional dentro de um período. O Firestore exige um índice combinado para esse tipo de consulta, e ele não é criado sozinho.
+
+Na primeira vez que você abrir a aba **Agenda**, aparece um recado dizendo que falta o índice. Para criar:
+
+1. Abra o console do navegador com **F12** → aba **Console**.
+2. O erro do Firestore traz um link começando com `https://console.firebase.google.com/...indexes?create_composite=...` — clique nele.
+3. A tela do Firebase abre já preenchida. Clique em **Criar índice**.
+4. Espere de um a dois minutos (fica "Compilando") e recarregue o painel.
+
+Se preferir criar na mão: Firestore Database → **Índices** → **Criar índice** → coleção `agendamentos`, campos `profissionalId` (crescente) e `data` (crescente) → Criar.
+
+## Como funciona o agendamento
+
+A cliente escolhe profissional, serviço, dia e hora no site. A grade de horários é montada a partir dos **horários de atendimento** de cada profissional (aba Agenda do painel) e da **duração do serviço** (aba Serviços): um serviço de 4 horas só aparece em horários onde caibam 4 horas seguidas antes do fechamento.
+
+O pedido entra como **aguardando validação** e a cliente é levada ao WhatsApp da profissional com a mensagem pronta. Enquanto não for validado, o horário **continua disponível** para outras clientes — é a profissional que tranca a agenda ao clicar em **Validar**.
+
+Situações possíveis: aguardando validação → agendado → concluído, ou cancelado a qualquer momento. Ao marcar **Concluir**, o painel pergunta o que foi feito e quanto entrou, e lança direto no faturamento daquela profissional.
+
+---
+
 ## Custos
 
 Tudo cabe no plano gratuito (Spark) do Firebase: 50 mil leituras e 20 mil gravações por dia, 1 GB de banco e 10 GB de tráfego por mês. Um site desse porte usa uma fração disso. Não é preciso cadastrar cartão.

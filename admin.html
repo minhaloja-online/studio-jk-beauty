@@ -97,6 +97,78 @@ input,textarea,select{ font:inherit; }
 .foto input[type=file]{ display:none; }
 .progresso{ font-size:.72rem; color:var(--rosa); }
 
+/* ---------- SUB-ABAS E AVISOS ---------- */
+.sub-abas{ display:flex; gap:4px; background:rgba(36,28,26,.05); padding:4px; border-radius:12px;
+  margin-bottom:22px; width:max-content; max-width:100%; overflow-x:auto; }
+.sub-aba{ padding:9px 18px; border-radius:9px; font-size:.76rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--suave); white-space:nowrap; transition:background .3s, color .3s; }
+.sub-aba.ativa{ background:var(--branco); color:var(--tinta); box-shadow:0 1px 4px rgba(36,28,26,.1); }
+
+.aviso-caixa{ background:#FDF6E6; border:1px solid #E8D9AE; border-radius:12px;
+  padding:14px 16px; font-size:.86rem; line-height:1.6; margin-bottom:20px; }
+.aviso-caixa b{ font-weight:500; }
+.aviso-caixa select{ margin-top:10px; padding:8px 10px; border:1px solid var(--borda);
+  border-radius:9px; background:var(--branco); font:inherit; }
+
+/* ---------- MODAL DO PAINEL ---------- */
+.modal-adm{ position:fixed; inset:0; z-index:900; display:grid; place-items:center; padding:5vw;
+  background:rgba(36,28,26,.55); backdrop-filter:blur(6px);
+  opacity:0; visibility:hidden; transition:opacity .35s, visibility .35s; }
+.modal-adm.aberto{ opacity:1; visibility:visible; }
+.modal-adm .cx{ width:min(100%,440px); background:var(--branco); border-radius:18px; padding:26px;
+  max-height:88svh; overflow:auto; transform:translateY(14px); transition:transform .4s; }
+.modal-adm.aberto .cx{ transform:none; }
+.modal-adm h3{ font-family:var(--display); font-weight:300; font-size:1.5rem; margin:0 0 4px; }
+.resumo-adm{ background:var(--porcelana); border-radius:12px; padding:12px 14px; margin:14px 0 18px; }
+.resumo-adm div{ display:flex; justify-content:space-between; gap:12px; padding:5px 0; font-size:.86rem; }
+.resumo-adm span{ color:var(--suave); }
+.resumo-adm b{ font-weight:500; }
+.btn.vazio{ background:transparent; color:var(--tinta); box-shadow:inset 0 0 0 1px var(--borda); }
+
+/* ---------- AGENDA ---------- */
+.hora-linha{ display:flex; align-items:center; gap:12px; padding:12px 0;
+  border-bottom:1px solid var(--borda); flex-wrap:wrap; }
+.hora-linha:last-child{ border-bottom:0; }
+.hora-linha .quando{ width:112px; flex:none; }
+.hora-linha .quando b{ font-family:var(--display); font-size:1.15rem; display:block; }
+.hora-linha .quando small{ font-size:.68rem; color:var(--suave); }
+.hora-linha .oque{ flex:1; min-width:150px; }
+.hora-linha .oque b{ font-weight:500; font-size:.92rem; display:block; }
+.hora-linha .oque small{ font-size:.76rem; color:var(--suave); }
+.hora-linha .acoes{ display:flex; gap:6px; flex-wrap:wrap; }
+.marca-status{ display:inline-flex; align-items:center; gap:6px; font-size:.7rem;
+  letter-spacing:.1em; text-transform:uppercase; padding:5px 11px; border-radius:999px;
+  background:rgba(36,28,26,.05); white-space:nowrap; }
+.marca-status i{ width:7px; height:7px; border-radius:50%; display:inline-block; }
+.dia-resumo{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--borda); }
+.dia-resumo:last-child{ border-bottom:0; }
+.dia-resumo .dt{ width:118px; flex:none; font-size:.85rem; }
+.dia-resumo .barra{ flex:1; height:6px; border-radius:3px; background:rgba(36,28,26,.07); overflow:hidden; }
+.dia-resumo .barra i{ display:block; height:100%; background:var(--rosa); }
+.dia-resumo .qtd{ font-size:.78rem; color:var(--suave); width:88px; text-align:right; flex:none; }
+
+.h-dia{ display:grid; grid-template-columns:104px 78px 1fr 1fr; gap:10px; align-items:center;
+  padding:9px 0; border-bottom:1px solid var(--borda); }
+.h-dia:last-child{ border-bottom:0; }
+.h-dia label{ display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--tinta); margin:0; letter-spacing:0; text-transform:none; }
+.h-dia input[type=time]{ width:100%; padding:7px 9px; border:1px solid var(--borda); border-radius:8px; background:var(--branco); font:inherit; font-size:.85rem; }
+.h-dia.off input[type=time]{ opacity:.4; }
+@media(max-width:640px){ .h-dia{ grid-template-columns:1fr 1fr; } .h-dia label{ grid-column:1/-1; } }
+
+/* ---------- DASHBOARD ---------- */
+.cat{ display:flex; align-items:center; gap:12px; padding:9px 0; }
+.cat .nm{ width:120px; flex:none; font-size:.85rem; }
+.cat .barra{ flex:1; height:8px; border-radius:4px; background:rgba(36,28,26,.07); overflow:hidden; }
+.cat .barra i{ display:block; height:100%; background:var(--rosa); }
+.cat .vl{ width:104px; text-align:right; flex:none; font-size:.85rem; }
+.comp{ display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  padding:11px 0; border-bottom:1px solid var(--borda); }
+.comp:last-child{ border-bottom:0; }
+.comp .nm{ font-size:.8rem; color:var(--suave); letter-spacing:.08em; text-transform:uppercase; }
+.comp .vl{ font-family:var(--display); font-size:1.15rem; }
+.comp .var{ font-size:.76rem; padding:3px 9px; border-radius:999px; background:rgba(36,28,26,.05); }
+.comp .var.sobe{ color:#2E7D5B; } .comp .var.desce{ color:#A8524F; }
+
 /* ---------- PROFISSIONAIS ---------- */
 .prof-adm{ display:grid; grid-template-columns:190px 1fr; gap:16px; align-items:start;
   border:1px solid var(--borda); border-radius:14px; padding:14px; margin-bottom:14px; background:var(--branco); }
@@ -251,6 +323,7 @@ input,textarea,select{ font:inherit; }
     <button class="aba on" data-aba="avaliacoes">Avaliações <span class="selo esconde" id="conta-pendentes">0</span></button>
     <button class="aba" data-aba="textos">Textos</button>
     <button class="aba" data-aba="servicos">Serviços</button>
+    <button class="aba" data-aba="agenda">Agenda</button>
     <button class="aba" data-aba="equipe">Profissionais</button>
     <button class="aba" data-aba="caixa">Financeiro</button>
     <button class="aba" data-aba="fotos">Fotos</button>
@@ -281,6 +354,57 @@ input,textarea,select{ font:inherit; }
       <div id="campos-textos"></div>
     </div>
 
+    <!-- AGENDA -->
+    <div class="pg esconde" id="pg-agenda">
+      <h1 class="titulo-pg">Agenda</h1>
+      <p class="legenda">Só você vê esta agenda. Pedidos feitos pelo site entram como <b>aguardando validação</b> e não trancam o horário até você confirmar.</p>
+
+      <div id="sem-vinculo" class="aviso-caixa esconde"></div>
+
+      <div class="mes-barra">
+        <label for="ag-dia">Dia</label>
+        <input type="date" id="ag-dia">
+        <button class="btn mini" id="ag-hoje">Hoje</button>
+        <button class="btn mini" id="ag-novo">+ Marcar horário</button>
+        <span id="ag-contador"></span>
+      </div>
+
+      <div class="bloco esconde" id="ag-form-novo">
+        <h3>Marcar horário na mão</h3>
+        <p class="desc">Para quando a cliente combina por telefone ou aparece no studio.</p>
+        <div class="dupla">
+          <div class="campo"><label for="mn-cliente">Cliente</label><input type="text" id="mn-cliente" placeholder="Nome"></div>
+          <div class="campo"><label for="mn-tel">Telefone (opcional)</label><input type="text" id="mn-tel" placeholder="(93) 9 9999-9999"></div>
+        </div>
+        <div class="dupla">
+          <div class="campo"><label for="mn-servico">Serviço</label><select id="mn-servico"></select></div>
+          <div class="campo"><label for="mn-dur">Duração (min)</label><input type="number" id="mn-dur" min="15" step="15" value="60"></div>
+        </div>
+        <div class="dupla">
+          <div class="campo"><label for="mn-data">Data</label><input type="date" id="mn-data"></div>
+          <div class="campo"><label for="mn-hora">Início</label><input type="time" id="mn-hora" step="300"></div>
+        </div>
+        <p class="aviso-linha" id="mn-erro"></p>
+        <button class="btn" id="mn-salvar">Marcar como agendado</button>
+      </div>
+
+      <div class="bloco">
+        <h3 id="ag-titulo-dia">Horários do dia</h3>
+        <div id="ag-lista"></div>
+      </div>
+
+      <div class="bloco">
+        <h3>Próximos 7 dias</h3>
+        <div id="ag-semana"></div>
+      </div>
+
+      <div class="bloco">
+        <h3>Meus horários de atendimento</h3>
+        <p class="desc">É o que o site usa para oferecer horários às clientes.</p>
+        <div id="ag-horarios"></div>
+      </div>
+    </div>
+
     <!-- PROFISSIONAIS -->
     <div class="pg esconde" id="pg-equipe">
       <h1 class="titulo-pg">Profissionais</h1>
@@ -304,6 +428,11 @@ input,textarea,select{ font:inherit; }
       <h1 class="titulo-pg">Financeiro</h1>
       <p class="legenda">Só você enxerga esta aba. Nada daqui aparece no site.</p>
 
+      <div class="sub-abas">
+        <button class="sub-aba ativa" data-sub="painel">Dashboard</button>
+        <button class="sub-aba" data-sub="lancar">Lançamentos</button>
+      </div>
+
       <div class="mes-barra">
         <label for="mes">Mês</label>
         <input type="month" id="mes">
@@ -311,16 +440,38 @@ input,textarea,select{ font:inherit; }
         <span id="filtro-quem"></span>
       </div>
 
-      <div class="painel-num" id="numeros"></div>
+      <div class="sub-pg" id="sub-painel">
+        <div class="painel-num" id="numeros"></div>
 
-      <div class="bloco">
-        <div class="cabeca-bloco">
-          <h3>Últimos 6 meses</h3>
-          <span class="desc" id="legenda-grafico"></span>
+        <div class="bloco">
+          <div class="cabeca-bloco">
+            <h3>Últimos 6 meses</h3>
+            <span class="desc" id="legenda-grafico"></span>
+          </div>
+          <div id="grafico"></div>
         </div>
-        <div id="grafico"></div>
+
+        <div class="bloco">
+          <div class="cabeca-bloco">
+            <h3>Para onde vai o dinheiro</h3>
+            <span class="desc">Custos do mês por categoria</span>
+          </div>
+          <div id="por-categoria"></div>
+        </div>
+
+        <div class="dupla-forms">
+          <div class="bloco">
+            <h3>Serviços que mais renderam</h3>
+            <div id="top-servicos"></div>
+          </div>
+          <div class="bloco">
+            <h3>Comparado ao mês passado</h3>
+            <div id="comparativo"></div>
+          </div>
+        </div>
       </div>
 
+      <div class="sub-pg esconde" id="sub-lancar">
       <div class="dupla-forms">
         <div class="bloco">
           <h3>Registrar atendimento</h3>
@@ -355,6 +506,7 @@ input,textarea,select{ font:inherit; }
       <div class="bloco">
         <h3>Lançamentos do mês</h3>
         <div id="lista-lancamentos"></div>
+      </div>
       </div>
     </div>
 
@@ -452,6 +604,24 @@ input,textarea,select{ font:inherit; }
     </div>
   </main>
 
+<!-- Fechamento do atendimento: vira lançamento no financeiro -->
+<div id="fechamento" class="modal-adm">
+  <div class="cx">
+    <h3>Atendimento concluído</h3>
+    <p class="desc">Lance o que foi feito para entrar no seu faturamento.</p>
+    <div class="resumo-adm" id="fc-resumo"></div>
+    <div class="campo"><label for="fc-servico">Serviços realizados</label>
+      <input type="text" id="fc-servico" placeholder="Ex.: Manicure + nail art"></div>
+    <div class="campo"><label for="fc-valor">Valor recebido (R$)</label>
+      <input type="number" id="fc-valor" step="0.01" min="0" placeholder="0,00"></div>
+    <div class="campo"><label for="fc-obs">Observação (opcional)</label>
+      <input type="text" id="fc-obs" placeholder="Forma de pagamento, detalhes…"></div>
+    <p class="aviso-linha" id="fc-erro"></p>
+    <button class="btn" id="fc-lancar">Lançar no faturamento</button>
+    <button class="btn vazio" id="fc-depois" style="margin-top:8px">Deixar para depois</button>
+  </div>
+</div>
+
   <div class="barra">
     <span class="estado" id="estado">Tudo salvo</span>
     <button class="btn linha" id="descartar">Descartar</button>
@@ -462,7 +632,7 @@ input,textarea,select{ font:inherit; }
 <div id="recado"></div>
 
 <script type="module">
-import { PADRAO, mesclar, migrar, SERVICO_NOVO, PROFISSIONAL_NOVA, FONTES_TITULO, FONTES_TEXTO, urlDasFontes } from "./assets/padrao.js";
+import { PADRAO, mesclar, migrar, SERVICO_NOVO, PROFISSIONAL_NOVA, DIAS, STATUS, FONTES_TITULO, FONTES_TEXTO, urlDasFontes } from "./assets/padrao.js";
 
 const $  = (s, e = document) => e.querySelector(s);
 const $$ = (s, e = document) => [...e.querySelectorAll(s)];
@@ -613,6 +783,12 @@ async function abrirPainel(user){
   await recarregarAcessos();
   montarProfissionais();
   montarServicos();
+  checarVinculo();
+  montarHorariosDeAtendimento();
+  atualizarSeletorDeServicoDaAgenda();
+  $("#ag-dia").value = hojeISO();
+  $("#mn-data").value = hojeISO();
+  await carregarAgenda();
   $("#mes").value = mesAtual();
   $("#r-data").value = $("#d-data").value = hojeISO();
   atualizarSeletorServicos();
@@ -656,7 +832,16 @@ function ligarCampos(raiz){
   $$("input[type=text],textarea", raiz).forEach(el => {
     if(!el.id.startsWith("cp-")) return;
     const caminho = el.id.slice(3).replace(/-/g, ".");
-    el.addEventListener("input", () => definir(caminho, el.tagName === "TEXTAREA" ? paraSite(el.value) : el.value.trim()));
+    el.addEventListener("input", () => {
+      if(caminho.endsWith(".duracao")){
+        // agenda precisa de número: 60, não "60"
+        definir(caminho, Math.max(15, parseInt(el.value, 10) || 60));
+        const espelho = el.closest(".dupla")?.querySelector("input[disabled]");
+        if(espelho) espelho.value = duracaoTxt(Math.max(15, parseInt(el.value, 10) || 60));
+        return;
+      }
+      definir(caminho, el.tagName === "TEXTAREA" ? paraSite(el.value) : el.value.trim());
+    });
   });
 }
 
@@ -934,6 +1119,13 @@ function montarServicos(){
           ${campo(`servicos.itens.${i}.nome`, "Nome do serviço")}
           ${campo(`servicos.itens.${i}.preco`, "Preço")}
         </div>
+        <div class="dupla">
+          ${campo(`servicos.itens.${i}.duracao`, "Duração em minutos")}
+          <div class="campo">
+            <label>Tempo reservado na agenda</label>
+            <input type="text" value="${duracaoTxt(+it.duracao || 60)}" disabled>
+          </div>
+        </div>
         <div class="campo">
           <label>Quem faz</label>
           <select class="dono-servico">
@@ -1124,6 +1316,312 @@ async function carregarAvaliacoes(){
     }
   }));
 }
+
+/* ============================================================
+   ABA AGENDA
+   Cada profissional vê só a agenda dela. Pedido feito pelo site
+   entra como "aguardando" e não tranca o horário até ser validado.
+   ============================================================ */
+const mmAg  = (h) => { const [a, b] = h.split(":").map(Number); return a * 60 + b; };
+const hhmmAg = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+const somaDias = (isoData, n) => {
+  const [a, m, d] = isoData.split("-").map(Number);
+  const x = new Date(a, m - 1, d + n);
+  return x.toLocaleDateString("sv-SE");
+};
+const diaBonito = (isoData) => {
+  const [a, m, d] = isoData.split("-").map(Number);
+  return new Date(a, m - 1, d).toLocaleDateString("pt-BR",
+    { weekday: "short", day: "2-digit", month: "short" }).replace(/\./g, "");
+};
+const duracaoTxt = (min) => {
+  const h = Math.floor(min / 60), r = min % 60;
+  return h && r ? `${h}h${String(r).padStart(2, "0")}` : h ? `${h}h` : `${r} min`;
+};
+
+let AGENDA = [];        // agendamentos carregados (dia escolhido + 7 dias)
+let NOMES = {};         // id do agendamento → nome da cliente
+
+function souSemAgenda(){ return !MEU_PID; }
+
+/** Se a conta ainda não está ligada a uma profissional, pede para escolher. */
+function checarVinculo(){
+  const caixa = $("#sem-vinculo");
+  if(MEU_PID){ caixa.classList.add("esconde"); return; }
+
+  caixa.classList.remove("esconde");
+  if(!SOU_DONA){
+    caixa.innerHTML = `<b>Sua conta ainda não está ligada a uma profissional.</b><br>
+      Peça para a administradora abrir a aba Profissionais e criar/vincular o seu acesso.`;
+    return;
+  }
+  caixa.innerHTML = `<b>Qual dessas profissionais é você?</b><br>
+    A agenda e o financeiro precisam saber para separar o que é seu.
+    <br><select id="quem-sou">
+      <option value="">Escolha…</option>
+      ${CFG.profissionais.map(p => `<option value="${p.id}">${escaparTxt(p.nome)}</option>`).join("")}
+    </select>`;
+  $("#quem-sou").addEventListener("change", async e => {
+    if(!e.target.value) return;
+    try{
+      await FB.definirMinhaProfissional(FB.auth.currentUser.uid, e.target.value);
+      MEU_PID = e.target.value;
+      if(PERFIL) PERFIL.profissionalId = MEU_PID;
+      checarVinculo();
+      montarHorariosDeAtendimento();
+      await carregarAgenda();
+      recado("Pronto — agenda ligada ao seu nome.");
+    }catch(err){ recado(FB.explicarErro(err), true); }
+  });
+}
+
+async function carregarAgenda(){
+  if(souSemAgenda()){ $("#ag-lista").innerHTML = ""; $("#ag-semana").innerHTML = ""; return; }
+  const dia = $("#ag-dia").value || hojeISO();
+
+  try{
+    AGENDA = await FB.agendaEntre(MEU_PID, dia < hojeISO() ? dia : hojeISO(), somaDias(dia, 8));
+  }catch(e){
+    AGENDA = [];
+    const msg = /index/i.test(e?.message || "")
+      ? "O Firestore pediu um índice para esta consulta. Abra o console do navegador (F12) e clique no link que aparece no erro para criá-lo — leva um minuto."
+      : FB.explicarErro(e);
+    $("#ag-lista").innerHTML = `<p class="desc">${escaparTxt(msg)}</p>`;
+    console.error(e);
+    return;
+  }
+
+  // nomes das clientes (uma leitura por agendamento; volume é pequeno)
+  await Promise.all(AGENDA.filter(a => !(a.id in NOMES)).map(async a => {
+    NOMES[a.id] = (await FB.dadosDaCliente(a.id)) || {};
+  }));
+
+  desenharAgenda();
+}
+
+function desenharAgenda(){
+  const dia = $("#ag-dia").value || hojeISO();
+  const doDia = AGENDA.filter(a => a.data === dia)
+    .sort((x, y) => x.inicio.localeCompare(y.inicio));
+
+  $("#ag-titulo-dia").textContent = "Horários de " + diaBonito(dia);
+  const pend = AGENDA.filter(a => a.status === "aguardando").length;
+  $("#ag-contador").innerHTML = pend
+    ? `<span class="dono-caixa">${pend} pedido(s) aguardando validação</span>` : "";
+
+  $("#ag-lista").innerHTML = doDia.length ? doDia.map(a => {
+    const st = STATUS[a.status] || STATUS.aguardando;
+    const cli = NOMES[a.id] || {};
+    return `<div class="hora-linha" data-id="${a.id}">
+      <span class="quando"><b>${a.inicio}</b><small>até ${a.fim} · ${duracaoTxt(a.duracao)}</small></span>
+      <span class="oque">
+        <b>${escaparTxt(cli.nome || "Cliente")}</b>
+        <small>${escaparTxt(a.servico || "")}${cli.telefone ? " · " + escaparTxt(cli.telefone) : ""}</small>
+      </span>
+      <span class="marca-status"><i style="background:${st.cor}"></i>${st.rotulo}</span>
+      <span class="acoes">
+        ${a.status === "aguardando" ? `<button class="btn mini validar">Validar</button>` : ""}
+        ${a.status === "agendado"   ? `<button class="btn mini concluir">Concluir</button>` : ""}
+        ${a.status !== "cancelado" && a.status !== "concluido" ? `<button class="btn mini perigo cancelar">Cancelar</button>` : ""}
+        ${a.status === "concluido" && !a.faturado ? `<button class="btn mini lancar">Lançar valor</button>` : ""}
+        <button class="btn mini perigo excluir-ag">Excluir</button>
+      </span>
+    </div>`;
+  }).join("") : `<p class="desc">Nenhum horário neste dia.</p>`;
+
+  ligarAcoesDaAgenda();
+
+  // próximos 7 dias
+  const dias = Array.from({ length: 7 }, (_, i) => somaDias(dia, i));
+  const maior = Math.max(1, ...dias.map(d => AGENDA.filter(a => a.data === d && a.status !== "cancelado").length));
+  $("#ag-semana").innerHTML = dias.map(d => {
+    const qtd = AGENDA.filter(a => a.data === d && a.status !== "cancelado").length;
+    return `<div class="dia-resumo">
+      <span class="dt">${diaBonito(d)}</span>
+      <span class="barra"><i style="width:${Math.round(qtd / maior * 100)}%"></i></span>
+      <span class="qtd">${qtd || "livre"}</span>
+    </div>`;
+  }).join("");
+}
+
+function ligarAcoesDaAgenda(){
+  $$("#ag-lista .hora-linha").forEach(linha => {
+    const id = linha.dataset.id;
+    const item = AGENDA.find(a => a.id === id);
+
+    const mudar = async (status) => {
+      try{
+        await FB.mudarStatus(id, status);
+        item.status = status;
+        desenharAgenda();
+        recado(status === "agendado" ? "Horário validado e trancado na agenda."
+             : status === "cancelado" ? "Agendamento cancelado — o horário voltou a ficar livre."
+             : "Atendimento concluído.");
+        if(status === "concluido") abrirLancamentoDoAtendimento(item);
+      }catch(e){ recado(FB.explicarErro(e), true); }
+    };
+
+    $(".validar", linha)?.addEventListener("click", () => mudar("agendado"));
+    $(".cancelar", linha)?.addEventListener("click", () => {
+      if(confirm("Cancelar este agendamento?")) mudar("cancelado");
+    });
+    $(".concluir", linha)?.addEventListener("click", () => mudar("concluido"));
+    $(".lancar", linha)?.addEventListener("click", () => abrirLancamentoDoAtendimento(item));
+    $(".excluir-ag", linha)?.addEventListener("click", async () => {
+      if(!confirm("Excluir este horário da agenda?")) return;
+      try{
+        await FB.apagarAgendamento(id);
+        AGENDA = AGENDA.filter(a => a.id !== id);
+        desenharAgenda();
+      }catch(e){ recado(FB.explicarErro(e), true); }
+    });
+  });
+}
+
+/** Ao concluir, pergunta o que foi feito e quanto entrou. Vai direto pro caixa. */
+function abrirLancamentoDoAtendimento(item){
+  const cli = NOMES[item.id] || {};
+  $("#fc-resumo").innerHTML = `
+    <div><span>Cliente</span><b>${escaparTxt(cli.nome || "Cliente")}</b></div>
+    <div><span>Dia</span><b>${diaBonito(item.data)} · ${item.inicio}</b></div>`;
+  $("#fc-servico").value = item.servico || "";
+  $("#fc-valor").value = "";
+  $("#fc-erro").textContent = "";
+  $("#fechamento").classList.add("aberto");
+  $("#fechamento").dataset.id = item.id;
+  setTimeout(() => $("#fc-valor").focus(), 250);
+}
+
+/* ---- horários de atendimento da profissional ---- */
+function montarHorariosDeAtendimento(){
+  const alvo = $("#ag-horarios");
+  const eu = CFG.profissionais.find(p => p.id === MEU_PID);
+  if(!eu){ alvo.innerHTML = `<p class="desc">Escolha quem você é para configurar seus horários.</p>`; return; }
+
+  alvo.innerHTML = DIAS.map(d => {
+    const h = eu.horarios[d.id] || { ativo: false, de: "09:00", ate: "18:00" };
+    return `<div class="h-dia ${h.ativo ? "" : "off"}" data-dia="${d.id}">
+      <label><input type="checkbox" class="h-ativo" ${h.ativo ? "checked" : ""}> ${d.nome}</label>
+      <input type="time" class="h-de" value="${h.de}" step="900">
+      <input type="time" class="h-ate" value="${h.ate}" step="900">
+      <span class="desc">${h.ativo ? "atendendo" : "fechado"}</span>
+    </div>`;
+  }).join("") + `
+    <div class="dupla" style="margin-top:18px">
+      <div class="campo"><label>Almoço — de</label><input type="time" id="h-alm-de" value="${eu.almoco.de}" step="900"></div>
+      <div class="campo"><label>Almoço — até</label><input type="time" id="h-alm-ate" value="${eu.almoco.ate}" step="900"></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--tinta);text-transform:none;letter-spacing:0">
+      <input type="checkbox" id="h-alm-ativo" ${eu.almoco.ativo ? "checked" : ""}> Fecho para o almoço
+    </label>
+    <div class="dupla" style="margin-top:18px">
+      <div class="campo"><label>Grade de horários (min)</label><input type="number" id="h-intervalo" min="15" step="15" value="${eu.intervalo}"></div>
+      <div class="campo"><label>Antecedência mínima (horas)</label><input type="number" id="h-antec" min="0" step="1" value="${eu.antecedenciaHoras}"></div>
+    </div>`;
+
+  const anotar = () => {
+    $$("#ag-horarios .h-dia").forEach(l => {
+      const d = l.dataset.dia;
+      const ativo = $(".h-ativo", l).checked;
+      eu.horarios[d] = { ativo, de: $(".h-de", l).value || "09:00", ate: $(".h-ate", l).value || "18:00" };
+      l.classList.toggle("off", !ativo);
+      $(".desc", l).textContent = ativo ? "atendendo" : "fechado";
+    });
+    eu.almoco = { ativo: $("#h-alm-ativo").checked, de: $("#h-alm-de").value, ate: $("#h-alm-ate").value };
+    eu.intervalo = Math.max(15, +$("#h-intervalo").value || 30);
+    eu.antecedenciaHoras = Math.max(0, +$("#h-antec").value || 0);
+    marcarSujo();
+  };
+  $$("#ag-horarios input").forEach(i => i.addEventListener("change", anotar));
+}
+
+/* ---- marcar na mão ---- */
+function atualizarSeletorDeServicoDaAgenda(){
+  const sel = $("#mn-servico");
+  const meus = CFG.servicos.itens.filter(s => !s.profissionalId || s.profissionalId === MEU_PID);
+  sel.innerHTML = meus.map(s =>
+    `<option value="${escaparTxt(s.nome)}" data-dur="${+s.duracao || 60}">${escaparTxt(s.nome)}</option>`).join("")
+    + `<option value="Outro" data-dur="60">Outro</option>`;
+  sel.addEventListener("change", () => {
+    $("#mn-dur").value = sel.selectedOptions[0]?.dataset.dur || 60;
+  }, { once: true });
+  $("#mn-dur").value = meus[0] ? (+meus[0].duracao || 60) : 60;
+}
+
+$("#ag-novo").addEventListener("click", () => {
+  $("#ag-form-novo").classList.toggle("esconde");
+  $("#mn-data").value = $("#ag-dia").value || hojeISO();
+});
+
+$("#mn-salvar").addEventListener("click", async () => {
+  const erro = $("#mn-erro");
+  if(souSemAgenda()) return erro.textContent = "Escolha quem você é antes de marcar horários.";
+  const cliente = $("#mn-cliente").value.trim();
+  const data = $("#mn-data").value;
+  const hora = $("#mn-hora").value;
+  const dur = +$("#mn-dur").value;
+  if(cliente.length < 2) return erro.textContent = "Escreva o nome da cliente.";
+  if(!data || !hora)     return erro.textContent = "Informe data e hora.";
+  if(!(dur >= 15))       return erro.textContent = "A duração precisa ser de pelo menos 15 minutos.";
+  erro.textContent = "";
+
+  const fim = hhmmAg(mmAg(hora) + dur);
+  const conflito = AGENDA.find(a => a.data === data && a.status !== "cancelado"
+    && mmAg(hora) < mmAg(a.fim) && mmAg(fim) > mmAg(a.inicio));
+  if(conflito) return erro.textContent = `Bate com o horário de ${conflito.inicio} às ${conflito.fim}.`;
+
+  const bt = $("#mn-salvar");
+  bt.disabled = true; bt.textContent = "Marcando…";
+  try{
+    await FB.pedirHorario({
+      profissionalId: MEU_PID, data, inicio: hora, fim, duracao: dur,
+      servico: $("#mn-servico").value, cliente, telefone: $("#mn-tel").value.trim(),
+      status: "agendado"
+    });
+    $("#mn-cliente").value = ""; $("#mn-tel").value = "";
+    $("#ag-form-novo").classList.add("esconde");
+    NOMES = {};
+    await carregarAgenda();
+    recado("Horário marcado e trancado na agenda.");
+  }catch(e){ erro.textContent = FB.explicarErro(e); console.error(e); }
+  finally{ bt.disabled = false; bt.textContent = "Marcar como agendado"; }
+});
+
+const fecharFechamento = () => $("#fechamento").classList.remove("aberto");
+$("#fc-depois").addEventListener("click", fecharFechamento);
+$("#fechamento").addEventListener("click", e => { if(e.target.id === "fechamento") fecharFechamento(); });
+
+$("#fc-lancar").addEventListener("click", async () => {
+  const id = $("#fechamento").dataset.id;
+  const item = AGENDA.find(a => a.id === id);
+  const valor = parseFloat($("#fc-valor").value);
+  const erro = $("#fc-erro");
+  if(!(valor > 0)) return erro.textContent = "Digite o valor recebido.";
+  erro.textContent = "";
+
+  const bt = $("#fc-lancar");
+  bt.disabled = true; bt.textContent = "Lançando…";
+  try{
+    const cli = NOMES[id] || {};
+    await FB.salvarLancamento(FB.auth.currentUser.uid, {
+      tipo: "receita",
+      data: item.data,
+      valor,
+      descricao: [cli.nome, $("#fc-obs").value.trim()].filter(Boolean).join(" · ").slice(0, 120),
+      categoria: $("#fc-servico").value.trim() || item.servico || "Atendimento"
+    });
+    await FB.mudarStatus(id, "concluido", { faturado: true, valor });
+    item.faturado = true; item.valor = valor;
+    desenharAgenda();
+    fecharFechamento();
+    await carregarCaixa();
+    recado("Lançado no faturamento.");
+  }catch(e){ erro.textContent = FB.explicarErro(e); console.error(e); }
+  finally{ bt.disabled = false; bt.textContent = "Lançar no faturamento"; }
+});
+
+$("#ag-dia").addEventListener("change", carregarAgenda);
+$("#ag-hoje").addEventListener("click", () => { $("#ag-dia").value = hojeISO(); carregarAgenda(); });
 
 /* ============================================================
    ABA PROFISSIONAIS
@@ -1407,6 +1905,49 @@ function desenharCaixa(){
       <span class="rot">${MESES[+d.m.slice(5) - 1]}</span>
     </div>`).join("");
 
+  /* custos por categoria */
+  const custos = itens.filter(i => i.tipo === "despesa");
+  const porCat = {};
+  custos.forEach(c => { porCat[c.categoria || "Outros"] = (porCat[c.categoria || "Outros"] || 0) + (+c.valor || 0); });
+  const cats = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+  const tetoCat = Math.max(1, ...cats.map(c => c[1]));
+  $("#por-categoria").innerHTML = cats.length ? cats.map(([nome, v]) => `
+    <div class="cat">
+      <span class="nm">${escaparTxt(nome)}</span>
+      <span class="barra"><i style="width:${Math.round(v / tetoCat * 100)}%"></i></span>
+      <span class="vl">${dinheiro.format(v)}</span>
+    </div>`).join("") : `<p class="desc">Nenhum custo lançado neste mês.</p>`;
+
+  /* serviços que mais renderam */
+  const receitas = itens.filter(i => i.tipo === "receita");
+  const porServ = {};
+  receitas.forEach(r => { porServ[r.categoria || "Atendimento"] = (porServ[r.categoria || "Atendimento"] || 0) + (+r.valor || 0); });
+  const servs = Object.entries(porServ).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const tetoServ = Math.max(1, ...servs.map(x => x[1]));
+  $("#top-servicos").innerHTML = servs.length ? servs.map(([nome, v]) => `
+    <div class="cat">
+      <span class="nm">${escaparTxt(nome)}</span>
+      <span class="barra"><i style="width:${Math.round(v / tetoServ * 100)}%"></i></span>
+      <span class="vl">${dinheiro.format(v)}</span>
+    </div>`).join("") : `<p class="desc">Nenhuma entrada lançada neste mês.</p>`;
+
+  /* comparativo com o mês anterior */
+  const ant = somaDoMes(mesAtras(mes, 1));
+  const linha = (nome, agora, antes) => {
+    const dif = antes > 0 ? Math.round((agora - antes) / antes * 100) : (agora > 0 ? 100 : 0);
+    const cls = dif > 0 ? "sobe" : dif < 0 ? "desce" : "";
+    return `<div class="comp">
+      <span class="nm">${nome}</span>
+      <span class="vl">${dinheiro.format(agora)}</span>
+      <span class="var ${cls}">${dif > 0 ? "+" : ""}${dif}%</span>
+    </div>`;
+  };
+  $("#comparativo").innerHTML =
+    linha("Faturamento", entra, ant.entra) +
+    linha("Custos", sai, ant.sai) +
+    linha("Lucro", lucro, ant.lucro) +
+    `<p class="desc" style="margin:12px 0 0">Comparado com ${MESES[+mesAtras(mes,1).slice(5) - 1]}.</p>`;
+
   /* lista do mês */
   const alvo = $("#lista-lancamentos");
   if(!itens.length){
@@ -1487,6 +2028,12 @@ async function lancar(tipo){
 
 $("#add-receita").addEventListener("click", () => lancar("receita"));
 $("#add-despesa").addEventListener("click", () => lancar("despesa"));
+$$(".sub-aba").forEach(b => b.addEventListener("click", () => {
+  $$(".sub-aba").forEach(x => x.classList.toggle("ativa", x === b));
+  $("#sub-painel").classList.toggle("esconde", b.dataset.sub !== "painel");
+  $("#sub-lancar").classList.toggle("esconde", b.dataset.sub !== "lancar");
+}));
+
 $("#mes").addEventListener("change", carregarCaixa);
 $("#mes-hoje").addEventListener("click", () => { $("#mes").value = mesAtual(); carregarCaixa(); });
 
@@ -1514,6 +2061,7 @@ $("#descartar").addEventListener("click", async () => {
   CFG = migrar(mesclar(PADRAO, salvo || {}));
   montarTextos(); montarContato(); montarAparencia(); await montarFotos();
   montarProfissionais(); montarServicos();
+  montarHorariosDeAtendimento(); atualizarSeletorDeServicoDaAgenda();
   marcarSujo(false);
   recado("Alterações descartadas.");
 });

@@ -117,6 +117,81 @@ export const aprovarAvaliacao = (id, valor = true) =>
 
 export const excluirAvaliacao = (id) => deleteDoc(doc(db, "reviews", id));
 
+/* ---------- AGENDA ----------
+   agendamentos/{id}   → ocupação do horário. Leitura pública, porque o
+                         site precisa saber o que já está tomado.
+                         Guarda profissionalId, data, início, fim, serviço
+                         e situação — nada que identifique a cliente.
+   agendamentos/{id}/privado/cliente → nome e telefone. Só a profissional
+                         daquela agenda consegue ler.
+   O id é montado como profissionalId_data_hora, então duas pessoas nunca
+   criam o mesmo horário por engano.                                      */
+
+const idDoHorario = (pid, data, inicio) => `${pid}_${data}_${inicio.replace(":", "")}`;
+
+/** Agendamentos de uma profissional num dia (para montar a grade livre). */
+export async function agendaDoDia(profissionalId, data){
+  const q = query(
+    collection(db, "agendamentos"),
+    where("profissionalId", "==", profissionalId),
+    where("data", "==", data)
+  );
+  const r = await getDocs(q);
+  return r.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+/** Agendamentos de uma profissional num período (agenda do painel). */
+export async function agendaEntre(profissionalId, inicio, fim){
+  const q = query(
+    collection(db, "agendamentos"),
+    where("profissionalId", "==", profissionalId),
+    where("data", ">=", inicio),
+    where("data", "<=", fim),
+    orderBy("data"),
+    limit(400)
+  );
+  const r = await getDocs(q);
+  return r.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+/** Cria o pedido de horário. Volta o id para o painel encontrar depois. */
+export async function pedirHorario({ profissionalId, data, inicio, fim, duracao,
+                                     servico, cliente, telefone, status = "aguardando" }){
+  const id = idDoHorario(profissionalId, data, inicio);
+  await setDoc(doc(db, "agendamentos", id), {
+    profissionalId, data, inicio, fim,
+    duracao: Number(duracao),
+    servico: String(servico || "").slice(0, 60),
+    status,
+    criadoEm: serverTimestamp()
+  });
+  await setDoc(doc(db, "agendamentos", id, "privado", "cliente"), {
+    nome: String(cliente || "").slice(0, 60),
+    telefone: String(telefone || "").slice(0, 25)
+  });
+  return id;
+}
+
+/** Nome e telefone de quem marcou (só a profissional consegue). */
+export async function dadosDaCliente(id){
+  try{
+    const s = await getDoc(doc(db, "agendamentos", id, "privado", "cliente"));
+    return s.exists() ? s.data() : null;
+  }catch(e){ return null; }
+}
+
+export const mudarStatus = (id, status, extra = {}) =>
+  updateDoc(doc(db, "agendamentos", id), { status, ...extra });
+
+export async function apagarAgendamento(id){
+  await deleteDoc(doc(db, "agendamentos", id, "privado", "cliente")).catch(() => {});
+  await deleteDoc(doc(db, "agendamentos", id));
+}
+
+/** Diz ao painel qual profissional é a conta logada (usado nas regras). */
+export const definirMinhaProfissional = (uid, profissionalId) =>
+  updateDoc(doc(db, "admins", uid), { profissionalId });
+
 /* ---------- CAIXA (entradas e custos) ----------
    Um documento por lançamento em lancamentos/{id}:
      tipo      "receita" (atendimento) ou "despesa" (custo)

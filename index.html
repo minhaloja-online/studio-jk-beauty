@@ -62,7 +62,7 @@
       <a href="#depoimentos">Depoimentos</a>
       <a href="#local">Onde ficamos</a>
     </nav>
-    <a class="btn" data-zap><span data-txt="hero.btn1">Agendar horário</span></a>
+    <a class="btn" data-agendar><span data-txt="hero.btn1">Agendar horário</span></a>
     <button class="hamb" id="hamb" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
   </div>
 </header>
@@ -73,7 +73,7 @@
   <a href="#galeria">Galeria</a>
   <a href="#depoimentos">Depoimentos</a>
   <a href="#local">Onde ficamos</a>
-  <a class="zap" data-zap>Agendar pelo WhatsApp</a>
+  <a class="zap" data-agendar>Agendar pelo WhatsApp</a>
 </nav>
 
 <nav class="cartela" id="cartela" aria-label="Navegação por seções">
@@ -106,7 +106,7 @@
       <p class="sub entra d2" data-txt="hero.texto">Um horário por vez, material esterilizado e acabamento que dura semanas. Você escolhe a cor sem pressa — e sai com a unha que imaginou.</p>
 
       <div class="acoes entra d3">
-        <a class="btn" data-zap>
+        <a class="btn" data-agendar>
           <span data-txt="hero.btn1">Agendar pelo WhatsApp</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
@@ -287,7 +287,7 @@
       </div>
       <div class="item">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6.5C4 15 9 20 17.5 20c1.5 0 2.5-1 2.5-2.2v-2l-4-1.6-1.7 2c-2.6-1.2-4.3-2.9-5.4-5.4l2-1.7L9.3 5h-2C6.1 5 4 5.9 4 6.5z"/></svg></div>
-        <div><b>WhatsApp</b><span data-txt="contato.whatsappTexto">(93) 9179-7198</span></div>
+        <div><b>WhatsApp</b><div id="local-zaps"><!-- por profissional --></div></div>
       </div>
 
       <a class="btn" style="justify-self:start;margin-top:.8rem" data-mapa><span>Abrir no Google Maps</span></a>
@@ -306,7 +306,7 @@
       <div class="rotulo" data-txt="final.rotulo">Agendamento</div>
       <h2 data-html="final.titulo">Vamos marcar<br><em>a sua?</em></h2>
       <p class="sub" data-txt="final.texto">Me chame no WhatsApp com o serviço que você quer e eu te mando os horários livres da semana.</p>
-      <a class="btn claro" data-zap>
+      <a class="btn claro" data-agendar>
         <span data-txt="final.botao">Falar com o studio</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
@@ -368,7 +368,71 @@
   <button class="nav prox" id="lupa-prox" aria-label="Próxima foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5l7 7-7 7"/></svg></button>
 </div>
 
-<!-- Escolha de profissional no agendamento -->
+<!-- ============ AGENDAMENTO ============ -->
+<div id="agendar" role="dialog" aria-modal="true" aria-labelledby="ag-tit">
+  <div class="caixa">
+    <button class="fechar-x" id="ag-fechar" aria-label="Fechar">✕</button>
+
+    <div class="trilho">
+      <span class="ponto ativo" data-etapa="1"></span>
+      <span class="ponto" data-etapa="2"></span>
+      <span class="ponto" data-etapa="3"></span>
+      <span class="ponto" data-etapa="4"></span>
+    </div>
+
+    <!-- 1. profissional -->
+    <section class="etapa ativa" data-etapa="1">
+      <h3 id="ag-tit">Com quem você quer agendar?</h3>
+      <p class="dica">Cada profissional tem a sua própria agenda.</p>
+      <div id="ag-profs"></div>
+    </section>
+
+    <!-- 2. serviço -->
+    <section class="etapa" data-etapa="2">
+      <button class="voltar" data-voltar="1">← Trocar profissional</button>
+      <h3>Qual serviço?</h3>
+      <p class="dica">O tempo reservado muda conforme o serviço.</p>
+      <div id="ag-servicos"></div>
+    </section>
+
+    <!-- 3. dia e hora -->
+    <section class="etapa" data-etapa="3">
+      <button class="voltar" data-voltar="2">← Trocar serviço</button>
+      <h3>Quando fica bom?</h3>
+      <p class="dica" id="ag-resumo-servico"></p>
+      <div class="dias" id="ag-dias"></div>
+      <div class="horas" id="ag-horas"></div>
+    </section>
+
+    <!-- 4. confirmação -->
+    <section class="etapa" data-etapa="4">
+      <button class="voltar" data-voltar="3">← Trocar horário</button>
+      <h3>Confirmar pelo WhatsApp</h3>
+      <div class="resumo" id="ag-resumo"></div>
+      <div class="campo">
+        <label for="ag-nome">Seu nome</label>
+        <input type="text" id="ag-nome" maxlength="60" placeholder="Como a profissional vai te chamar">
+      </div>
+      <p class="alerta" id="ag-alerta"></p>
+      <p class="erro" id="ag-erro"></p>
+      <button class="btn" id="ag-enviar"><span>Enviar no WhatsApp</span></button>
+      <p class="dica" style="margin:.9rem 0 0;text-align:center">
+        O horário só fica reservado depois que a profissional confirmar a sua mensagem.
+      </p>
+    </section>
+
+    <!-- pronto -->
+    <section class="etapa" data-etapa="5">
+      <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 13l4 4L19 7"/></svg></div>
+      <h3>Pedido registrado!</h3>
+      <p class="dica" id="ag-final"></p>
+      <button class="btn" id="ag-reenviar"><span>Abrir o WhatsApp de novo</span></button>
+      <button class="cancelar" id="ag-terminar">Fechar</button>
+    </section>
+  </div>
+</div>
+
+<!-- Escolha de profissional para conversar no WhatsApp -->
 <div id="escolher" role="dialog" aria-modal="true" aria-labelledby="escolher-tit">
   <div class="caixa">
     <h3 id="escolher-tit">Com quem você quer agendar?</h3>

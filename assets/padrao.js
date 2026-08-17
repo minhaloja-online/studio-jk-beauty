@@ -45,10 +45,10 @@ export const PADRAO = {
     titulo: "Escolha o seu cuidado",
     nota: "Valores conversados no WhatsApp, de acordo com o tamanho e o estado da unha. Sem surpresa na hora de pagar.",
     itens: [
-      { nome: "Manicure",      texto: "Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true },
-      { nome: "Pedicure",      texto: "Pés cuidados de verdade, com esfoliação e aquele alívio no fim do dia.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true },
-      { nome: "Unhas em gel",  texto: "Alongamento e blindagem para unhas resistentes, com brilho que não cai.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true },
-      { nome: "Nail Art",      texto: "Desenho feito à mão, francesinha, pedraria — traga a referência que a gente faz.", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true }
+      { nome: "Manicure",      texto: "Cutícula feita com cuidado, formato do seu gosto e esmaltação impecável.", preco: "Sob consulta", duracao: 60, foto: "", profissionalId: "", visivel: true },
+      { nome: "Pedicure",      texto: "Pés cuidados de verdade, com esfoliação e aquele alívio no fim do dia.", preco: "Sob consulta", duracao: 60, foto: "", profissionalId: "", visivel: true },
+      { nome: "Unhas em gel",  texto: "Alongamento e blindagem para unhas resistentes, com brilho que não cai.", preco: "Sob consulta", duracao: 150, foto: "", profissionalId: "", visivel: true },
+      { nome: "Nail Art",      texto: "Desenho feito à mão, francesinha, pedraria — traga a referência que a gente faz.", preco: "Sob consulta", duracao: 90, foto: "", profissionalId: "", visivel: true }
     ]
   },
 
@@ -69,7 +69,20 @@ export const PADRAO = {
       foto: "",
       whatsapp: "5593991797198",
       instagram: "https://www.instagram.com/karine_portela18/",
-      visivel: true
+      visivel: true,
+      horarios: {
+        seg: { ativo: true,  de: "09:00", ate: "18:00" },
+        ter: { ativo: true,  de: "09:00", ate: "18:00" },
+        qua: { ativo: true,  de: "09:00", ate: "18:00" },
+        qui: { ativo: true,  de: "09:00", ate: "18:00" },
+        sex: { ativo: true,  de: "09:00", ate: "18:00" },
+        sab: { ativo: true,  de: "09:00", ate: "14:00" },
+        dom: { ativo: false, de: "09:00", ate: "12:00" }
+      },
+      almoco: { ativo: true, de: "12:00", ate: "13:30" },
+      intervalo: 30,              // de quanto em quanto a grade oferece horário
+      antecedenciaHoras: 2,       // não deixa marcar para daqui a menos que isso
+      diasAFrente: 45
     },
     {
       id: "p2",
@@ -79,7 +92,20 @@ export const PADRAO = {
       foto: "",
       whatsapp: "",
       instagram: "",
-      visivel: false
+      visivel: false,
+      horarios: {
+        seg: { ativo: true,  de: "09:00", ate: "18:00" },
+        ter: { ativo: true,  de: "09:00", ate: "18:00" },
+        qua: { ativo: true,  de: "09:00", ate: "18:00" },
+        qui: { ativo: true,  de: "09:00", ate: "18:00" },
+        sex: { ativo: true,  de: "09:00", ate: "18:00" },
+        sab: { ativo: true,  de: "09:00", ate: "14:00" },
+        dom: { ativo: false, de: "09:00", ate: "12:00" }
+      },
+      almoco: { ativo: true, de: "12:00", ate: "13:30" },
+      intervalo: 30,              // de quanto em quanto a grade oferece horário
+      antecedenciaHoras: 2,       // não deixa marcar para daqui a menos que isso
+      diasAFrente: 45
     }
   ],
 
@@ -154,14 +180,44 @@ export const PADRAO = {
 
 /* Modelo de um serviço novo criado pelo painel */
 export const SERVICO_NOVO = () =>
-  ({ nome: "Novo serviço", texto: "", preco: "Sob consulta", foto: "", profissionalId: "", visivel: true });
+  ({ nome: "Novo serviço", texto: "", preco: "Sob consulta", duracao: 60, foto: "", profissionalId: "", visivel: true });
 
 /* Modelo de profissional nova. O id é sorteado e fica para sempre:
    é ele que liga serviços e acesso ao painel à pessoa certa. */
 export const PROFISSIONAL_NOVA = () =>
   ({ id: "p" + Math.random().toString(36).slice(2, 8),
      nome: "Nova profissional", funcao: "Nail designer", bio: "",
-     foto: "", whatsapp: "", instagram: "", visivel: true });
+     foto: "", whatsapp: "", instagram: "", visivel: true,
+     horarios: {
+       seg: { ativo: true,  de: "09:00", ate: "18:00" },
+       ter: { ativo: true,  de: "09:00", ate: "18:00" },
+       qua: { ativo: true,  de: "09:00", ate: "18:00" },
+       qui: { ativo: true,  de: "09:00", ate: "18:00" },
+       sex: { ativo: true,  de: "09:00", ate: "18:00" },
+       sab: { ativo: true,  de: "09:00", ate: "14:00" },
+       dom: { ativo: false, de: "09:00", ate: "12:00" }
+     },
+     almoco: { ativo: true, de: "12:00", ate: "13:30" },
+     intervalo: 30, antecedenciaHoras: 2, diasAFrente: 45 });
+
+/* Dias da semana na ordem em que aparecem no painel e no site. */
+export const DIAS = [
+  { id: "dom", curto: "Dom", nome: "Domingo" },
+  { id: "seg", curto: "Seg", nome: "Segunda" },
+  { id: "ter", curto: "Ter", nome: "Terça"   },
+  { id: "qua", curto: "Qua", nome: "Quarta"  },
+  { id: "qui", curto: "Qui", nome: "Quinta"  },
+  { id: "sex", curto: "Sex", nome: "Sexta"   },
+  { id: "sab", curto: "Sáb", nome: "Sábado"  }
+];
+
+/* Situação de um agendamento. */
+export const STATUS = {
+  aguardando: { rotulo: "Aguardando validação", cor: "#B98A2E" },
+  agendado:   { rotulo: "Agendado",             cor: "#2E7D5B" },
+  concluido:  { rotulo: "Concluído",            cor: "#5B6E86" },
+  cancelado:  { rotulo: "Cancelado",            cor: "#A8524F" }
+};
 
 /* Ajusta configurações salvas antes da mudança em que os serviços
    passaram a ser uma lista livre com foto própria. Roda toda vez:
@@ -189,7 +245,17 @@ export function migrar(cfg){
     primeira.instagram = cfg.contato?.instagram  || primeira.instagram;
     cfg.profissionais = [primeira, { ...PADRAO.profissionais[1] }];
   }
-  cfg.profissionais = cfg.profissionais.map(p => ({ ...PADRAO.profissionais[1], ...p }));
+  cfg.profissionais = cfg.profissionais.map(p => {
+    const base = PROFISSIONAL_NOVA();
+    const pronto = { ...base, ...p };
+    pronto.horarios = { ...base.horarios, ...(p.horarios || {}) };
+    pronto.almoco   = { ...base.almoco,   ...(p.almoco   || {}) };
+    pronto.id = p.id || base.id;
+    return pronto;
+  });
+
+  /* serviços cadastrados antes de existir duração */
+  cfg.servicos.itens.forEach(s => { if(!(+s.duracao > 0)) s.duracao = 60; });
 
   return cfg;
 }
