@@ -154,6 +154,21 @@ export async function agendaEntre(profissionalId, inicio, fim){
   return r.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+/** Pedidos aguardando validação, de qualquer data — não deixa passar
+    um pedido que caiu num mês que a profissional não está olhando.
+    Só filtros de igualdade: não precisa de índice combinado. */
+export async function pendentesDe(profissionalId){
+  const q = query(
+    collection(db, "agendamentos"),
+    where("profissionalId", "==", profissionalId),
+    where("status", "==", "aguardando"),
+    limit(100)
+  );
+  const r = await getDocs(q);
+  return r.docs.map(d => ({ id: d.id, ...d.data() }))
+               .sort((a, b) => (a.data + a.inicio).localeCompare(b.data + b.inicio));
+}
+
 /** Cria o pedido de horário. Volta o id para o painel encontrar depois. */
 export async function pedirHorario({ profissionalId, data, inicio, fim, duracao,
                                      servico, cliente, telefone, status = "aguardando" }){

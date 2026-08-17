@@ -140,12 +140,47 @@ input,textarea,select{ font:inherit; }
   letter-spacing:.1em; text-transform:uppercase; padding:5px 11px; border-radius:999px;
   background:rgba(36,28,26,.05); white-space:nowrap; }
 .marca-status i{ width:7px; height:7px; border-radius:50%; display:inline-block; }
-.dia-resumo{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--borda); }
-.dia-resumo:last-child{ border-bottom:0; }
-.dia-resumo .dt{ width:118px; flex:none; font-size:.85rem; }
-.dia-resumo .barra{ flex:1; height:6px; border-radius:3px; background:rgba(36,28,26,.07); overflow:hidden; }
-.dia-resumo .barra i{ display:block; height:100%; background:var(--rosa); }
-.dia-resumo .qtd{ font-size:.78rem; color:var(--suave); width:88px; text-align:right; flex:none; }
+/* topo da agenda e navegação de mês */
+.ag-topo{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  margin-bottom:20px; flex-wrap:wrap; }
+.mes-nav{ display:flex; align-items:center; gap:10px; }
+.mes-nav b{ font-family:var(--display); font-weight:300; font-size:1.25rem; min-width:170px; text-align:center; }
+
+/* caixa dos pedidos pendentes */
+.bloco.pendentes{ border-color:#E8D9AE; background:#FDFBF4; }
+
+/* calendário */
+.cal-cab{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px; }
+.cal-cab span{ text-align:center; font-size:.64rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--suave); padding:4px 0; }
+.cal-grade{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.cal-dia{ position:relative; min-height:92px; padding:7px 6px 6px; border-radius:11px; text-align:left;
+  background:var(--porcelana); box-shadow:inset 0 0 0 1px rgba(36,28,26,.06);
+  display:flex; flex-direction:column; gap:5px; transition:background .25s, box-shadow .25s, transform .25s; }
+.cal-dia:hover{ background:var(--branco); box-shadow:inset 0 0 0 1px var(--rosa); transform:translateY(-2px); }
+.cal-dia.fora{ opacity:.4; }
+.cal-dia .n{ font-family:var(--display); font-size:1rem; line-height:1; }
+.cal-dia.hoje .n{ color:var(--rosa); font-weight:500; }
+.cal-dia.hoje{ box-shadow:inset 0 0 0 1px var(--rosa); }
+.cal-dia.sel{ background:var(--escuro); box-shadow:none; }
+.cal-dia.sel .n{ color:var(--dourado); }
+.cal-dia.sel .chip{ background:rgba(247,242,238,.12); color:var(--branco); }
+.cal-dia.sel .mais{ color:rgba(247,242,238,.7); }
+.cal-dia[data-pend]::after{ content:""; position:absolute; top:7px; right:7px;
+  width:7px; height:7px; border-radius:50%; background:#B98A2E; }
+.cal-dia .chips{ display:flex; flex-direction:column; gap:3px; }
+.cal-dia .chip{ font-style:normal; font-size:.66rem; padding:2px 5px; border-radius:5px;
+  background:rgba(36,28,26,.05); border-left:3px solid var(--c); white-space:nowrap; overflow:hidden; }
+.cal-dia .mais{ font-style:normal; font-size:.62rem; color:var(--suave); padding-left:3px; }
+.cal-legenda{ display:flex; gap:16px; flex-wrap:wrap; margin-top:16px; font-size:.72rem; color:var(--suave); }
+.cal-legenda span{ display:inline-flex; align-items:center; gap:6px; }
+.cal-legenda i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
+@media(max-width:760px){
+  .cal-dia{ min-height:66px; padding:5px 4px; }
+  .cal-dia .chip{ font-size:.58rem; padding:1px 3px; }
+  .mes-nav b{ min-width:130px; font-size:1.05rem; }
+}
 
 .h-dia{ display:grid; grid-template-columns:104px 78px 1fr 1fr; gap:10px; align-items:center;
   padding:9px 0; border-bottom:1px solid var(--borda); }
@@ -361,12 +396,23 @@ input,textarea,select{ font:inherit; }
 
       <div id="sem-vinculo" class="aviso-caixa esconde"></div>
 
-      <div class="mes-barra">
-        <label for="ag-dia">Dia</label>
-        <input type="date" id="ag-dia">
-        <button class="btn mini" id="ag-hoje">Hoje</button>
+      <div class="ag-topo">
+        <div class="mes-nav">
+          <button class="btn mini" id="ag-ant" aria-label="Mês anterior">←</button>
+          <b id="ag-mes-nome"></b>
+          <button class="btn mini" id="ag-prox" aria-label="Mês seguinte">→</button>
+          <button class="btn mini" id="ag-hoje">Hoje</button>
+        </div>
         <button class="btn mini" id="ag-novo">+ Marcar horário</button>
-        <span id="ag-contador"></span>
+      </div>
+
+      <div class="bloco pendentes esconde" id="ag-pendentes-cx">
+        <div class="cabeca-bloco">
+          <h3>Pedidos aguardando validação</h3>
+          <span class="desc" id="ag-contador"></span>
+        </div>
+        <p class="desc">Aparecem aqui de qualquer data, mesmo fora do mês que você está vendo. Enquanto não validar, o horário segue livre para outra cliente.</p>
+        <div id="ag-pendentes"></div>
       </div>
 
       <div class="bloco esconde" id="ag-form-novo">
@@ -389,13 +435,14 @@ input,textarea,select{ font:inherit; }
       </div>
 
       <div class="bloco">
-        <h3 id="ag-titulo-dia">Horários do dia</h3>
-        <div id="ag-lista"></div>
+        <div class="cal-cab" id="cal-cab"></div>
+        <div class="cal-grade" id="cal-grade"></div>
+        <div class="cal-legenda" id="cal-legenda"></div>
       </div>
 
       <div class="bloco">
-        <h3>Próximos 7 dias</h3>
-        <div id="ag-semana"></div>
+        <h3 id="ag-titulo-dia">Horários do dia</h3>
+        <div id="ag-lista"></div>
       </div>
 
       <div class="bloco">
@@ -786,7 +833,7 @@ async function abrirPainel(user){
   checarVinculo();
   montarHorariosDeAtendimento();
   atualizarSeletorDeServicoDaAgenda();
-  $("#ag-dia").value = hojeISO();
+  MES_AG = mesAtual(); DIA_SEL = hojeISO();
   $("#mn-data").value = hojeISO();
   await carregarAgenda();
   $("#mes").value = mesAtual();
@@ -1339,8 +1386,11 @@ const duracaoTxt = (min) => {
   return h && r ? `${h}h${String(r).padStart(2, "0")}` : h ? `${h}h` : `${r} min`;
 };
 
-let AGENDA = [];        // agendamentos carregados (dia escolhido + 7 dias)
-let NOMES = {};         // id do agendamento → nome da cliente
+let AGENDA = [];        // agendamentos do mês que está na tela
+let PENDENTES = [];     // pedidos aguardando validação, de qualquer data
+let NOMES = {};         // id do agendamento → dados da cliente
+let MES_AG = "";        // mês do calendário, "AAAA-MM"
+let DIA_SEL = "";       // dia aberto embaixo do calendário
 
 function souSemAgenda(){ return !MEU_PID; }
 
@@ -1369,45 +1419,165 @@ function checarVinculo(){
       if(PERFIL) PERFIL.profissionalId = MEU_PID;
       checarVinculo();
       montarHorariosDeAtendimento();
+      atualizarSeletorDeServicoDaAgenda();
       await carregarAgenda();
       recado("Pronto — agenda ligada ao seu nome.");
     }catch(err){ recado(FB.explicarErro(err), true); }
   });
 }
 
-async function carregarAgenda(){
-  if(souSemAgenda()){ $("#ag-lista").innerHTML = ""; $("#ag-semana").innerHTML = ""; return; }
-  const dia = $("#ag-dia").value || hojeISO();
+const primeiroDia = (mes) => mes + "-01";
+const ultimoDiaMes = (mes) => {
+  const [a, m] = mes.split("-").map(Number);
+  return `${mes}-${String(new Date(a, m, 0).getDate()).padStart(2, "0")}`;
+};
+const nomeDoMes = (mes) => {
+  const [a, m] = mes.split("-").map(Number);
+  const t = new Date(a, m - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
 
-  try{
-    AGENDA = await FB.agendaEntre(MEU_PID, dia < hojeISO() ? dia : hojeISO(), somaDias(dia, 8));
-  }catch(e){
-    AGENDA = [];
-    const msg = /index/i.test(e?.message || "")
-      ? "O Firestore pediu um índice para esta consulta. Abra o console do navegador (F12) e clique no link que aparece no erro para criá-lo — leva um minuto."
-      : FB.explicarErro(e);
-    $("#ag-lista").innerHTML = `<p class="desc">${escaparTxt(msg)}</p>`;
-    console.error(e);
+/** Carrega o mês do calendário e, junto, os pedidos pendentes de qualquer data. */
+async function carregarAgenda(){
+  if(souSemAgenda()){
+    $("#cal-grade").innerHTML = ""; $("#ag-lista").innerHTML = "";
+    $("#ag-pendentes-cx").classList.add("esconde");
     return;
   }
+  MES_AG = MES_AG || mesAtual();
+  $("#ag-mes-nome").textContent = nomeDoMes(MES_AG);
 
-  // nomes das clientes (uma leitura por agendamento; volume é pequeno)
-  await Promise.all(AGENDA.filter(a => !(a.id in NOMES)).map(async a => {
+  const [mes, pend] = await Promise.all([
+    FB.agendaEntre(MEU_PID, primeiroDia(MES_AG), ultimoDiaMes(MES_AG)).catch(e => e),
+    FB.pendentesDe(MEU_PID).catch(() => [])
+  ]);
+
+  if(mes instanceof Error || !Array.isArray(mes)){
+    AGENDA = [];
+    const link = (mes?.message || "").match(/https:\/\/console\.firebase\.google\.com\/[^\s)]+/)?.[0];
+    $("#cal-grade").innerHTML = link
+      ? `<div class="aviso-caixa" style="grid-column:1/-1;margin:0">
+           <b>Falta criar um índice no Firestore.</b><br>
+           A agenda consulta os horários de uma profissional dentro de um período, e o Firestore
+           precisa de um índice para isso. É só criar uma vez.<br>
+           <a href="${link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;text-decoration:underline">
+             Abrir o Firebase e criar o índice →</a><br>
+           <span class="desc">Depois de criar, espere um minuto e recarregue esta página.</span>
+         </div>`
+      : `<p class="desc" style="grid-column:1/-1">${escaparTxt(FB.explicarErro(mes))}</p>`;
+    console.error(mes);
+  }else{
+    AGENDA = mes;
+  }
+  PENDENTES = pend;
+
+  // nomes das clientes (volume pequeno: uma leitura por agendamento novo)
+  const tudo = [...AGENDA, ...PENDENTES];
+  await Promise.all(tudo.filter(a => !(a.id in NOMES)).map(async a => {
     NOMES[a.id] = (await FB.dadosDaCliente(a.id)) || {};
   }));
 
+  if(!DIA_SEL || !DIA_SEL.startsWith(MES_AG)){
+    DIA_SEL = MES_AG === mesAtual() ? hojeISO() : primeiroDia(MES_AG);
+  }
   desenharAgenda();
 }
 
+/** Junta o mês visível com os pendentes de fora dele, sem repetir. */
+function todosVisiveis(){
+  const mapa = new Map();
+  [...AGENDA, ...PENDENTES].forEach(a => mapa.set(a.id, a));
+  return [...mapa.values()];
+}
+
 function desenharAgenda(){
-  const dia = $("#ag-dia").value || hojeISO();
-  const doDia = AGENDA.filter(a => a.data === dia)
+  desenharPendentes();
+  desenharCalendario();
+  desenharDia();
+}
+
+function desenharPendentes(){
+  const cx = $("#ag-pendentes-cx");
+  if(!PENDENTES.length){ cx.classList.add("esconde"); $("#ag-contador").textContent = ""; return; }
+  cx.classList.remove("esconde");
+  $("#ag-contador").textContent =
+    `${PENDENTES.length} ${PENDENTES.length === 1 ? "pedido" : "pedidos"}`;
+
+  const hoje = hojeISO();
+  $("#ag-pendentes").innerHTML = PENDENTES.map(a => {
+    const cli = NOMES[a.id] || {};
+    const passou = a.data < hoje;
+    return `<div class="hora-linha" data-id="${a.id}">
+      <span class="quando">
+        <b>${a.inicio}</b>
+        <small>${diaBonito(a.data)}${passou ? " · já passou" : ""}</small>
+      </span>
+      <span class="oque">
+        <b>${escaparTxt(cli.nome || "Cliente")}</b>
+        <small>${escaparTxt(a.servico || "")} · ${duracaoTxt(a.duracao)}${cli.telefone ? " · " + escaparTxt(cli.telefone) : ""}</small>
+      </span>
+      <span class="acoes">
+        <button class="btn mini validar">Validar</button>
+        <button class="btn mini perigo cancelar">Cancelar</button>
+        <button class="btn mini ir-dia" data-dia="${a.data}">Ver no dia</button>
+      </span>
+    </div>`;
+  }).join("");
+  ligarAcoesDaAgenda($("#ag-pendentes"));
+}
+
+function desenharCalendario(){
+  $("#cal-cab").innerHTML = DIAS.map(d => `<span>${d.curto}</span>`).join("");
+
+  const [ano, mes] = MES_AG.split("-").map(Number);
+  const inicio = new Date(ano, mes - 1, 1);
+  const recuo = inicio.getDay();                  // domingo = 0
+  const total = new Date(ano, mes, 0).getDate();
+  const celulas = Math.ceil((recuo + total) / 7) * 7;
+  const hoje = hojeISO();
+  const doMes = todosVisiveis();
+
+  let html = "";
+  for(let i = 0; i < celulas; i++){
+    const d = new Date(ano, mes - 1, 1 - recuo + i);
+    const iso = d.toLocaleDateString("sv-SE");
+    const fora = !iso.startsWith(MES_AG);
+    const itens = doMes.filter(a => a.data === iso && a.status !== "cancelado")
+                       .sort((x, y) => x.inicio.localeCompare(y.inicio));
+    const pend = itens.filter(a => a.status === "aguardando").length;
+
+    html += `<button class="cal-dia${fora ? " fora" : ""}${iso === hoje ? " hoje" : ""}${iso === DIA_SEL ? " sel" : ""}"
+      data-dia="${iso}"${pend ? ' data-pend="1"' : ""}>
+      <span class="n">${d.getDate()}</span>
+      <span class="chips">
+        ${itens.slice(0, 3).map(a => {
+          const st = STATUS[a.status] || STATUS.aguardando;
+          return `<i class="chip" style="--c:${st.cor}">${a.inicio}</i>`;
+        }).join("")}
+        ${itens.length > 3 ? `<i class="mais">+${itens.length - 3}</i>` : ""}
+      </span>
+    </button>`;
+  }
+  $("#cal-grade").innerHTML = html;
+
+  $("#cal-legenda").innerHTML = Object.entries(STATUS)
+    .filter(([k]) => k !== "cancelado")
+    .map(([, v]) => `<span><i style="background:${v.cor}"></i>${v.rotulo}</span>`).join("");
+
+  $$("#cal-grade .cal-dia").forEach(b => b.addEventListener("click", () => {
+    const iso = b.dataset.dia;
+    if(!iso.startsWith(MES_AG)){ MES_AG = iso.slice(0, 7); DIA_SEL = iso; return carregarAgenda(); }
+    DIA_SEL = iso;
+    desenharCalendario();
+    desenharDia();
+  }));
+}
+
+function desenharDia(){
+  const doDia = todosVisiveis().filter(a => a.data === DIA_SEL)
     .sort((x, y) => x.inicio.localeCompare(y.inicio));
 
-  $("#ag-titulo-dia").textContent = "Horários de " + diaBonito(dia);
-  const pend = AGENDA.filter(a => a.status === "aguardando").length;
-  $("#ag-contador").innerHTML = pend
-    ? `<span class="dono-caixa">${pend} pedido(s) aguardando validação</span>` : "";
+  $("#ag-titulo-dia").textContent = "Horários de " + diaBonito(DIA_SEL);
 
   $("#ag-lista").innerHTML = doDia.length ? doDia.map(a => {
     const st = STATUS[a.status] || STATUS.aguardando;
@@ -1427,32 +1597,27 @@ function desenharAgenda(){
         <button class="btn mini perigo excluir-ag">Excluir</button>
       </span>
     </div>`;
-  }).join("") : `<p class="desc">Nenhum horário neste dia.</p>`;
+  }).join("") : `<p class="desc">Nenhum horário neste dia. Use “+ Marcar horário” para encaixar alguém.</p>`;
 
-  ligarAcoesDaAgenda();
-
-  // próximos 7 dias
-  const dias = Array.from({ length: 7 }, (_, i) => somaDias(dia, i));
-  const maior = Math.max(1, ...dias.map(d => AGENDA.filter(a => a.data === d && a.status !== "cancelado").length));
-  $("#ag-semana").innerHTML = dias.map(d => {
-    const qtd = AGENDA.filter(a => a.data === d && a.status !== "cancelado").length;
-    return `<div class="dia-resumo">
-      <span class="dt">${diaBonito(d)}</span>
-      <span class="barra"><i style="width:${Math.round(qtd / maior * 100)}%"></i></span>
-      <span class="qtd">${qtd || "livre"}</span>
-    </div>`;
-  }).join("");
+  ligarAcoesDaAgenda($("#ag-lista"));
 }
 
-function ligarAcoesDaAgenda(){
-  $$("#ag-lista .hora-linha").forEach(linha => {
+
+function ligarAcoesDaAgenda(raiz){
+  $$(".hora-linha", raiz).forEach(linha => {
     const id = linha.dataset.id;
-    const item = AGENDA.find(a => a.id === id);
+    const item = todosVisiveis().find(a => a.id === id);
+    if(!item) return;
 
     const mudar = async (status) => {
       try{
         await FB.mudarStatus(id, status);
         item.status = status;
+        // sai (ou entra) da lista de pendentes conforme o novo estado
+        PENDENTES = PENDENTES.filter(a => a.id !== id);
+        const noMes = AGENDA.find(a => a.id === id);
+        if(noMes) noMes.status = status;
+        else if(item.data.startsWith(MES_AG)) AGENDA.push(item);
         desenharAgenda();
         recado(status === "agendado" ? "Horário validado e trancado na agenda."
              : status === "cancelado" ? "Agendamento cancelado — o horário voltou a ficar livre."
@@ -1467,11 +1632,20 @@ function ligarAcoesDaAgenda(){
     });
     $(".concluir", linha)?.addEventListener("click", () => mudar("concluido"));
     $(".lancar", linha)?.addEventListener("click", () => abrirLancamentoDoAtendimento(item));
+    $(".ir-dia", linha)?.addEventListener("click", (e) => {
+      const iso = e.target.dataset.dia;
+      DIA_SEL = iso;
+      if(!iso.startsWith(MES_AG)){ MES_AG = iso.slice(0, 7); return carregarAgenda(); }
+      desenharAgenda();
+      $("#ag-titulo-dia").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
     $(".excluir-ag", linha)?.addEventListener("click", async () => {
       if(!confirm("Excluir este horário da agenda?")) return;
       try{
         await FB.apagarAgendamento(id);
         AGENDA = AGENDA.filter(a => a.id !== id);
+        PENDENTES = PENDENTES.filter(a => a.id !== id);
         desenharAgenda();
       }catch(e){ recado(FB.explicarErro(e), true); }
     });
@@ -1550,7 +1724,7 @@ function atualizarSeletorDeServicoDaAgenda(){
 
 $("#ag-novo").addEventListener("click", () => {
   $("#ag-form-novo").classList.toggle("esconde");
-  $("#mn-data").value = $("#ag-dia").value || hojeISO();
+  $("#mn-data").value = DIA_SEL || hojeISO();
 });
 
 $("#mn-salvar").addEventListener("click", async () => {
@@ -1566,8 +1740,10 @@ $("#mn-salvar").addEventListener("click", async () => {
   erro.textContent = "";
 
   const fim = hhmmAg(mmAg(hora) + dur);
-  const conflito = AGENDA.find(a => a.data === data && a.status !== "cancelado"
-    && mmAg(hora) < mmAg(a.fim) && mmAg(fim) > mmAg(a.inicio));
+  let doDia = [];
+  try{ doDia = await FB.agendaDoDia(MEU_PID, data); }catch(e){ console.warn(e); }
+  const conflito = doDia.find(a => a.status === "agendado" || a.status === "concluido"
+    ? mmAg(hora) < mmAg(a.fim) && mmAg(fim) > mmAg(a.inicio) : false);
   if(conflito) return erro.textContent = `Bate com o horário de ${conflito.inicio} às ${conflito.fim}.`;
 
   const bt = $("#mn-salvar");
@@ -1581,6 +1757,8 @@ $("#mn-salvar").addEventListener("click", async () => {
     $("#mn-cliente").value = ""; $("#mn-tel").value = "";
     $("#ag-form-novo").classList.add("esconde");
     NOMES = {};
+    if(!data.startsWith(MES_AG)){ MES_AG = data.slice(0, 7); }
+    DIA_SEL = data;
     await carregarAgenda();
     recado("Horário marcado e trancado na agenda.");
   }catch(e){ erro.textContent = FB.explicarErro(e); console.error(e); }
@@ -1620,8 +1798,12 @@ $("#fc-lancar").addEventListener("click", async () => {
   finally{ bt.disabled = false; bt.textContent = "Lançar no faturamento"; }
 });
 
-$("#ag-dia").addEventListener("change", carregarAgenda);
-$("#ag-hoje").addEventListener("click", () => { $("#ag-dia").value = hojeISO(); carregarAgenda(); });
+const andarMes = (n) => { MES_AG = mesAtras(MES_AG, -n); DIA_SEL = ""; carregarAgenda(); };
+$("#ag-ant").addEventListener("click", () => andarMes(-1));
+$("#ag-prox").addEventListener("click", () => andarMes(1));
+$("#ag-hoje").addEventListener("click", () => {
+  MES_AG = mesAtual(); DIA_SEL = hojeISO(); carregarAgenda();
+});
 
 /* ============================================================
    ABA PROFISSIONAIS
