@@ -240,6 +240,10 @@ export async function salvarLancamento(uid, { tipo, data, valor, descricao, cate
   });
 }
 
+/** Corrige um lançamento já feito (valor, serviço, data, tipo). */
+export const atualizarLancamento = (uid, id, dados) =>
+  updateDoc(doc(db, "admins", uid, "lancamentos", id), dados);
+
 export const excluirLancamento = (uid, id) =>
   deleteDoc(doc(db, "admins", uid, "lancamentos", id));
 

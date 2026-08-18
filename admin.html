@@ -262,6 +262,13 @@ input,textarea,select{ font:inherit; }
 .lanc .txt b{ font-weight:500; font-size:.9rem; display:block; }
 .lanc .txt small{ font-size:.72rem; color:var(--suave); }
 .lanc .val{ font-family:var(--display); font-size:1.05rem; white-space:nowrap; }
+.lanc .btn.mini{ flex:none; }
+@media(max-width:620px){
+  .lanc{ flex-wrap:wrap; }
+  .lanc .txt{ flex:1 1 100%; order:2; }
+  .lanc .val{ order:1; margin-left:auto; }
+  .lanc .btn.mini{ order:3; }
+}
 .lanc .val.ent{ color:#2E7D5B; }
 .lanc .val.sai{ color:#B4453F; }
 
@@ -651,14 +658,41 @@ input,textarea,select{ font:inherit; }
     </div>
   </main>
 
+<!-- Corrigir um lançamento já feito -->
+<div id="edicao" class="modal-adm">
+  <div class="cx">
+    <h3>Corrigir lançamento</h3>
+    <p class="desc">Ajuste o que ficou errado. A alteração já reflete no dashboard.</p>
+    <div class="dupla">
+      <div class="campo"><label for="ed-tipo">Tipo</label>
+        <select id="ed-tipo">
+          <option value="receita">Entrada (faturamento)</option>
+          <option value="despesa">Custo</option>
+        </select></div>
+      <div class="campo"><label for="ed-data">Data</label><input type="date" id="ed-data"></div>
+    </div>
+    <div class="campo"><label for="ed-cat">Serviço / categoria</label><select id="ed-cat"></select></div>
+    <div class="campo esconde" id="ed-cx-outro"><label for="ed-outro">Qual?</label>
+      <input type="text" id="ed-outro" placeholder="Escreva o serviço ou a categoria"></div>
+    <div class="campo"><label for="ed-valor">Valor (R$)</label>
+      <input type="number" id="ed-valor" step="0.01" min="0" placeholder="0,00"></div>
+    <div class="campo"><label for="ed-desc">Observação</label><input type="text" id="ed-desc"></div>
+    <p class="aviso-linha" id="ed-erro"></p>
+    <button class="btn" id="ed-salvar">Salvar correção</button>
+    <button class="btn vazio" id="ed-cancelar" style="margin-top:8px">Cancelar</button>
+  </div>
+</div>
+
 <!-- Fechamento do atendimento: vira lançamento no financeiro -->
 <div id="fechamento" class="modal-adm">
   <div class="cx">
     <h3>Atendimento concluído</h3>
     <p class="desc">Lance o que foi feito para entrar no seu faturamento.</p>
     <div class="resumo-adm" id="fc-resumo"></div>
-    <div class="campo"><label for="fc-servico">Serviços realizados</label>
-      <input type="text" id="fc-servico" placeholder="Ex.: Manicure + nail art"></div>
+    <div class="campo"><label for="fc-servico">Serviço realizado</label>
+      <select id="fc-servico"></select></div>
+    <div class="campo esconde" id="fc-cx-outro"><label for="fc-outro">Qual serviço?</label>
+      <input type="text" id="fc-outro" placeholder="Ex.: manutenção + nail art"></div>
     <div class="campo"><label for="fc-valor">Valor recebido (R$)</label>
       <input type="number" id="fc-valor" step="0.01" min="0" placeholder="0,00"></div>
     <div class="campo"><label for="fc-obs">Observação (opcional)</label>
@@ -1658,8 +1692,20 @@ function abrirLancamentoDoAtendimento(item){
   $("#fc-resumo").innerHTML = `
     <div><span>Cliente</span><b>${escaparTxt(cli.nome || "Cliente")}</b></div>
     <div><span>Dia</span><b>${diaBonito(item.data)} · ${item.inicio}</b></div>`;
-  $("#fc-servico").value = item.servico || "";
-  $("#fc-valor").value = "";
+  // lista os serviços dela, com o do agendamento já escolhido
+  const meus = CFG.servicos.itens.filter(sv =>
+    (sv.nome || "").trim() && (!sv.profissionalId || sv.profissionalId === MEU_PID));
+  const sel = $("#fc-servico");
+  sel.innerHTML = meus.map(sv =>
+    `<option value="${escaparTxt(sv.nome)}" data-preco="${escaparTxt(sv.preco || "")}">${escaparTxt(sv.nome)}</option>`
+  ).join("") + `<option value="__outro">Outro serviço…</option>`;
+
+  const combina = meus.some(sv => sv.nome === item.servico);
+  sel.value = combina ? item.servico : (meus.length ? meus[0].nome : "__outro");
+  $("#fc-cx-outro").classList.toggle("esconde", sel.value !== "__outro");
+  $("#fc-outro").value = combina ? "" : (item.servico || "");
+
+  $("#fc-valor").value = valorSugerido(sel.selectedOptions[0]?.dataset.preco);
   $("#fc-erro").textContent = "";
   $("#fechamento").classList.add("aberto");
   $("#fechamento").dataset.id = item.id;
@@ -1765,6 +1811,19 @@ $("#mn-salvar").addEventListener("click", async () => {
   finally{ bt.disabled = false; bt.textContent = "Marcar como agendado"; }
 });
 
+/** Tira um número do texto do preço ("R$ 120,00" → 120). Vazio se não der. */
+function valorSugerido(preco){
+  const m = String(preco || "").replace(/\./g, "").match(/(\d+(?:,\d{1,2})?)/);
+  return m ? m[1].replace(",", ".") : "";
+}
+
+$("#fc-servico").addEventListener("change", e => {
+  const outro = e.target.value === "__outro";
+  $("#fc-cx-outro").classList.toggle("esconde", !outro);
+  if(outro){ $("#fc-outro").focus(); return; }
+  if(!$("#fc-valor").value) $("#fc-valor").value = valorSugerido(e.target.selectedOptions[0]?.dataset.preco);
+});
+
 const fecharFechamento = () => $("#fechamento").classList.remove("aberto");
 $("#fc-depois").addEventListener("click", fecharFechamento);
 $("#fechamento").addEventListener("click", e => { if(e.target.id === "fechamento") fecharFechamento(); });
@@ -1774,6 +1833,8 @@ $("#fc-lancar").addEventListener("click", async () => {
   const item = AGENDA.find(a => a.id === id);
   const valor = parseFloat($("#fc-valor").value);
   const erro = $("#fc-erro");
+  if($("#fc-servico").value === "__outro" && $("#fc-outro").value.trim().length < 2)
+    return erro.textContent = "Escreva qual foi o serviço.";
   if(!(valor > 0)) return erro.textContent = "Digite o valor recebido.";
   erro.textContent = "";
 
@@ -1786,7 +1847,9 @@ $("#fc-lancar").addEventListener("click", async () => {
       data: item.data,
       valor,
       descricao: [cli.nome, $("#fc-obs").value.trim()].filter(Boolean).join(" · ").slice(0, 120),
-      categoria: $("#fc-servico").value.trim() || item.servico || "Atendimento"
+      categoria: ($("#fc-servico").value === "__outro"
+        ? $("#fc-outro").value.trim()
+        : $("#fc-servico").value) || item.servico || "Atendimento"
     });
     await FB.mudarStatus(id, "concluido", { faturado: true, valor });
     item.faturado = true; item.valor = valor;
@@ -2147,9 +2210,15 @@ function desenharCaixa(){
           <small>${escaparTxt(l.categoria || (entrada ? "Atendimento" : "Custo"))}</small>
         </span>
         <span class="val ${entrada ? "ent" : "sai"}">${entrada ? "+" : "−"} ${dinheiro.format(l.valor)}</span>
+        <button class="btn mini editar-lanc">Editar</button>
         <button class="btn mini perigo apagar-lanc">Excluir</button>
       </div>`;
     }).join("");
+
+  $$(".editar-lanc", alvo).forEach(bt => bt.addEventListener("click", () => {
+    const id = bt.closest(".lanc").dataset.id;
+    abrirEdicao(lancamentos.find(l => l.id === id));
+  }));
 
   $$(".apagar-lanc", alvo).forEach(bt => bt.addEventListener("click", async () => {
     const linha = bt.closest(".lanc");
@@ -2210,6 +2279,83 @@ async function lancar(tipo){
 
 $("#add-receita").addEventListener("click", () => lancar("receita"));
 $("#add-despesa").addEventListener("click", () => lancar("despesa"));
+/* ---- corrigir um lançamento já feito ---- */
+const CATEGORIAS_CUSTO = ["Materiais", "Ferramentas", "Aluguel", "Energia e água", "Marketing", "Outros"];
+
+/** Preenche a lista de categorias conforme o tipo, mantendo a atual escolhida. */
+function montarCategoriasDaEdicao(tipo, atual){
+  const opcoes = tipo === "receita"
+    ? CFG.servicos.itens
+        .filter(sv => (sv.nome || "").trim() && (!sv.profissionalId || sv.profissionalId === MEU_PID))
+        .map(sv => sv.nome)
+    : CATEGORIAS_CUSTO.slice();
+
+  const conhecida = atual && opcoes.includes(atual);
+  if(atual && !conhecida) opcoes.push(atual);      // não perde o que já estava gravado
+
+  $("#ed-cat").innerHTML = opcoes.map(o =>
+    `<option value="${escaparTxt(o)}">${escaparTxt(o)}</option>`).join("")
+    + `<option value="__outro">Outro…</option>`;
+  $("#ed-cat").value = atual || opcoes[0] || "__outro";
+  $("#ed-cx-outro").classList.toggle("esconde", $("#ed-cat").value !== "__outro");
+}
+
+function abrirEdicao(l){
+  if(!l) return;
+  const m = $("#edicao");
+  m.dataset.id = l.id;
+  $("#ed-tipo").value = l.tipo;
+  $("#ed-data").value = l.data;
+  $("#ed-valor").value = l.valor;
+  $("#ed-desc").value = l.descricao || "";
+  $("#ed-outro").value = "";
+  $("#ed-erro").textContent = "";
+  montarCategoriasDaEdicao(l.tipo, l.categoria || "");
+  m.classList.add("aberto");
+  setTimeout(() => $("#ed-valor").focus(), 250);
+}
+
+const fecharEdicao = () => $("#edicao").classList.remove("aberto");
+$("#ed-cancelar").addEventListener("click", fecharEdicao);
+$("#edicao").addEventListener("click", e => { if(e.target.id === "edicao") fecharEdicao(); });
+
+$("#ed-tipo").addEventListener("change", e => montarCategoriasDaEdicao(e.target.value, ""));
+$("#ed-cat").addEventListener("change", e => {
+  const outro = e.target.value === "__outro";
+  $("#ed-cx-outro").classList.toggle("esconde", !outro);
+  if(outro) $("#ed-outro").focus();
+});
+
+$("#ed-salvar").addEventListener("click", async () => {
+  const id = $("#edicao").dataset.id;
+  const erro = $("#ed-erro");
+  const valor = parseFloat($("#ed-valor").value);
+  const data = $("#ed-data").value;
+  const cat = $("#ed-cat").value === "__outro" ? $("#ed-outro").value.trim() : $("#ed-cat").value;
+
+  if(!data) return erro.textContent = "Escolha a data.";
+  if(!(valor > 0)) return erro.textContent = "O valor precisa ser maior que zero.";
+  if(!cat) return erro.textContent = "Escolha ou escreva o serviço/categoria.";
+  erro.textContent = "";
+
+  const bt = $("#ed-salvar");
+  bt.disabled = true; bt.textContent = "Salvando…";
+  try{
+    const dados = {
+      tipo: $("#ed-tipo").value,
+      data,
+      valor,
+      categoria: cat.slice(0, 40),
+      descricao: $("#ed-desc").value.trim().slice(0, 120)
+    };
+    await FB.atualizarLancamento(FB.auth.currentUser.uid, id, dados);
+    fecharEdicao();
+    await carregarCaixa();          // se mudou de mês, some da lista atual — é o esperado
+    recado("Lançamento corrigido.");
+  }catch(e){ erro.textContent = FB.explicarErro(e); console.error(e); }
+  finally{ bt.disabled = false; bt.textContent = "Salvar correção"; }
+});
+
 $$(".sub-aba").forEach(b => b.addEventListener("click", () => {
   $$(".sub-aba").forEach(x => x.classList.toggle("ativa", x === b));
   $("#sub-painel").classList.toggle("esconde", b.dataset.sub !== "painel");
